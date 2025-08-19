@@ -1,0 +1,108 @@
+// DetectionPerformanceView.h
+#pragma once
+#include <QWidget>
+#include <QTabWidget>
+#include <QComboBox>
+#include <QPushButton>
+#include <QLabel>
+#include <QGroupBox>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include "SingleEvaluationController.h"
+#include "FormationEvaluationController.h" // 添加编队评估控制器
+// #include "GeoUtils.h"
+
+class ModelSelectionDialog;
+
+class DetectionPerformanceView : public QWidget {
+    Q_OBJECT
+public:
+    explicit DetectionPerformanceView(QWidget *parent = nullptr);
+    ~DetectionPerformanceView();
+     // 添加距离计算函数
+    static double calculateSpatialDistance(
+        double lon1, double lat1, double alt1, 
+        double lon2, double lat2, double alt2);
+
+private slots:
+    void onConditionChanged(int index);
+    void onSelectRadar();
+    void onSelectJammer();
+    void onSelectTarget();
+    void onEvaluate();
+    void showRadarDetails();
+    void showJammerDetails();
+    void showTargetDetails();
+    
+    // 编队评估槽函数
+    void onFormationConditionChanged(int index);
+    void onSelectTransmitter();
+    void onSelectReceiver();
+    void onSelectFormationJammer();
+    void onSelectFormationTarget();
+    void onFormationEvaluate();
+    void showTransmitterDetails();
+    void showReceiverDetails();
+    void showFormationJammerDetails();
+    void showFormationTargetDetails();
+
+private:
+    void setupUI();
+    void setupSingleEvaluationUI(); // 单独的单机评估UI设置
+    void setupFormationUI();        // 单独的编队评估UI设置
+    void updateModelDisplay();
+    void updateFormationModelDisplay(); // 编队模型显示更新
+
+    QTabWidget *tabWidget;
+    QWidget *singleEvaluationTab;
+    QWidget *formationEvaluationTab; // 编队评估标签页
+    
+    // 单机评估控件
+    QComboBox *conditionComboBox;
+    QPushButton *selectRadarButton;
+    QPushButton *selectJammerButton;
+    QPushButton *selectTargetButton;
+    QPushButton *evaluateButton;
+    QLabel *radarLabel;
+    QLabel *jammerLabel;
+    QLabel *targetLabel;
+    QLabel *rcsLabel;
+    QLabel *resultLabel;
+    
+    // 编队评估控件
+    // QComboBox *formationAlgorithmComboBox;
+    QComboBox *formationConditionComboBox;
+    QPushButton *selectTransmitterButton;
+    QPushButton *selectReceiverButton;
+    QPushButton *selectFormationJammerButton;
+    QPushButton *selectFormationTargetButton;
+    QPushButton *formationEvaluateButton;
+    QLabel *transmitterLabel;
+    QLabel *receiverLabel;
+    QLabel *formationJammerLabel;
+    QLabel *formationTargetLabel;
+    QLabel *formationRcsLabel;
+    QLabel *formationResultLabel;
+    
+    // 当前选中的模型 - 使用指针替代optional
+    RadarModel* currentRadar = nullptr;
+    JammerModel* currentJammer = nullptr;
+    TargetModel* currentTarget = nullptr;
+    RcsData* currentRcs = nullptr;
+    
+    // 编队评估模型
+    RadarModel* currentTransmitter = nullptr;
+    RadarModel* currentReceiver = nullptr;
+    JammerModel* currentFormationJammer = nullptr;
+    TargetModel* currentFormationTarget = nullptr;
+    RcsData* currentFormationRcs = nullptr;
+    
+    // 对话框
+    ModelSelectionDialog *radarDialog;
+    ModelSelectionDialog *jammerDialog;
+    ModelSelectionDialog *targetDialog;
+    ModelSelectionDialog *radarDialogForTransmitter = nullptr; // 新增发射站专用对话框
+    ModelSelectionDialog *radarDialogForReceiver = nullptr;   // 新增接收站专用对话框
+
+    
+};
