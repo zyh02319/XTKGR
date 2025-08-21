@@ -1,8 +1,6 @@
 #include "SingleEvaluation.h"
 #include <cmath>
 
-constexpr double PI = 3.14159265358979323846;
-
 double SingleEvaluation::calculateWithoutJam(const RadarModel& radar, const RcsData& rcs) {
     // 公式: R_max^4 = (P_t * G_t^2 * λ^2 * σ) / [(4π)^3 * L * S_min]
     
@@ -16,7 +14,7 @@ double SingleEvaluation::calculateWithoutJam(const RadarModel& radar, const RcsD
     double sigma = rcs.rcs_value;
     
     double numerator = P_t * pow(G_t, 2) * pow(lambda, 2) * sigma;
-    double denominator = pow(4 * PI, 3) * ConstantValue::L * ConstantValue::S_min;
+    double denominator = pow(4 * ConstantValue::PI, 3) * ConstantValue::L * ConstantValue::S_min;
     
     return pow(numerator / denominator, 0.25);
 }
@@ -87,7 +85,7 @@ double SingleEvaluation::calculateWithJam(const RadarModel& radar,
     
     // 修改为四次方根计算
     double numerator = P_t * ConstantValue::T0 * G_t * sigma * ConstantValue::g * (distance * distance);
-    double denominator = 4 * PI * rho_j * G_j * ConstantValue::r_J * K_Jmin;
+    double denominator = 4 * ConstantValue::PI * rho_j * G_j * ConstantValue::r_J * K_Jmin;
     
     // 四次方根计算
     return pow(numerator / denominator, 0.25);

@@ -9,21 +9,16 @@
 
 class FormationEvaluation {
 public:
-    // 算法1：成天桢论文算法
-    static double evaluateChengAlgorithm(
-        const RadarModel& transmitter,
-        const RadarModel& receiver,
-        const JammerModel* jammer,
-        const RcsData& rcs,
-        double baseline,
-        int condition);
+    // 无干扰条件下的编队评估
+    static double calculateWithoutJam(const std::vector<RadarModel>& radars,
+                                    const RcsData& rcs);
     
-    // 算法2：廖玉忠论文算法
-    static double evaluateLiaoAlgorithm(
-        const RadarModel& transmitter,
-        const RadarModel& receiver,
-        const JammerModel* jammer,
-        const RcsData& rcs,
-        double baseline,
-        int condition);
+    // 有干扰条件下的编队评估
+    static double calculateWithJam(const std::vector<RadarModel>& radars,
+                                  const JammerModel& jammer,
+                                  const RcsData& rcs);
+    // 抗干扰条件下的编队评估
+    static double calculateWithAntiJam(const std::vector<RadarModel>& radars,
+                                      const JammerModel& jammer,
+                                      const RcsData& rcs);
 };
