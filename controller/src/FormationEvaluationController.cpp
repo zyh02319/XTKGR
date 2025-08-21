@@ -10,20 +10,29 @@ double FormationEvaluationController::evaluateFormation(
     const TargetModel& target,
     const RcsData& rcs) 
 {
-    double baseline = DetectionPerformanceView::calculateSpatialDistance(
-        transmitter.longitude, transmitter.latitude, transmitter.altitude,
-        receiver.longitude, receiver.latitude, receiver.altitude
-    );
+    // 创建雷达数组，包含发射机和接收机
+    std::vector<RadarModel> radars;
+    radars.push_back(transmitter);
+    radars.push_back(receiver);
     
     // 根据干扰条件选择算法
     switch (condition) {
-    case 0: // 无干扰 - 廖玉忠算法
-        return FormationEvaluation::evaluateLiaoAlgorithm(
-            transmitter, receiver, jammer, rcs, baseline, condition);
-    case 1: // 有干扰 - 成天桢算法
-    case 2: // 抗干扰 - 成天桢算法
-        return FormationEvaluation::evaluateChengAlgorithm(
-            transmitter, receiver, jammer, rcs, baseline, condition);
+    case 0: // 无干扰
+        return FormationEvaluation::calculateWithoutJam(radars, rcs);
+    case 1: // 有干扰
+        if (jammer != nullptr) {
+            return FormationEvaluation::calculateWithJam(radars, *jammer, rcs);
+        } else {
+            // 如果没有干扰机，按无干扰处理
+            return FormationEvaluation::calculateWithoutJam(radars, rcs);
+        }
+    case 2: // 抗干扰
+        if (jammer != nullptr) {
+            return FormationEvaluation::calculateWithAntiJam(radars, *jammer, rcs);
+        } else {
+            // 如果没有干扰机，按无干扰处理
+            return FormationEvaluation::calculateWithoutJam(radars, rcs);
+        }
     default:
         return 0.0;
     }
