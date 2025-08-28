@@ -61,6 +61,16 @@ void TargetModelEditDialog::initUI() {
     altitudeSpin->setSingleStep(1);
     altitudeSpin->setSuffix(" m");       // 单位
 
+    headingSpin = new QDoubleSpinBox;
+    headingSpin->setRange(0, 360);
+    headingSpin->setDecimals(2);
+    headingSpin->setSuffix(" °");
+    
+    speedSpin = new QDoubleSpinBox;
+    speedSpin->setRange(0, 100000);
+    speedSpin->setDecimals(2);
+    speedSpin->setSuffix(" km/h");
+
      // 添加目标类型选项（根据 SQL 文件定义）
     typeCombo->addItem("空中");
     typeCombo->addItem("地面");
@@ -76,6 +86,8 @@ void TargetModelEditDialog::initUI() {
     formLayout->addRow("经度:", longitudeSpin);
     formLayout->addRow("纬度:", latitudeSpin);
     formLayout->addRow("高度:", altitudeSpin);
+    formLayout->addRow("航向:", headingSpin);
+    formLayout->addRow("飞行速度:", speedSpin);
     
     targetGroup->setLayout(formLayout);
     mainLayout->addWidget(targetGroup);
@@ -139,6 +151,8 @@ void TargetModelEditDialog::loadTargetData() {
         longitudeSpin->setValue(currentModel.longitude);
         latitudeSpin->setValue(currentModel.latitude);
         altitudeSpin->setValue(currentModel.altitude);
+        headingSpin->setValue(currentModel.heading);
+        speedSpin->setValue(currentModel.speed);
     }
 }
 
@@ -170,6 +184,8 @@ TargetModel TargetModelEditDialog::getTargetModel() const {
     model.longitude = longitudeSpin->value();
     model.latitude = latitudeSpin->value();
     model.altitude = altitudeSpin->value();
+    model.heading = headingSpin->value();
+    model.speed = speedSpin->value();
     return model;
 }
 

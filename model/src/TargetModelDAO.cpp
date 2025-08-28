@@ -7,13 +7,15 @@
 
 bool TargetModelDAO::insert(const TargetModel& model) {
     std::stringstream ss;
-    ss << "INSERT INTO target_model (name, target_type, longitude, latitude, altitude, position) "
+    ss << "INSERT INTO target_model (name, target_type, longitude, latitude, altitude, position, heading, speed) "
        << "VALUES ('" << DataManager::getInstance().escapeString(model.name) << "', "
        << "'" << DataManager::getInstance().escapeString(model.target_type) << "', "
        << model.longitude << ", "
        << model.latitude << ", "
        << model.altitude << ", "
-       << "ST_GeomFromText('POINT(" << model.longitude << " " << model.latitude << ")'))";
+       << "ST_GeomFromText('POINT(" << model.longitude << " " << model.latitude << ")'), "
+       << model.heading << ", "
+       << model.speed << ")";
     
     return DataManager::getInstance().executeQuery(ss.str());
 }
@@ -35,7 +37,7 @@ std::vector<std::pair<int, std::string>> TargetModelDAO::getAllTargetNamesAndIds
 std::vector<TargetModel> TargetModelDAO::findByName(const std::string& name) {
     std::vector<TargetModel> result;
     std::string escapedName = DataManager::getInstance().escapeString(name);
-    std::string query = "SELECT id, name, target_type, longitude, latitude, altitude "
+    std::string query = "SELECT id, name, target_type, longitude, latitude, altitude, heading, speed "
                         "FROM target_model WHERE name = '" + escapedName + "'";
     
     MYSQL_RES* res = DataManager::getInstance().executeSelectQuery(query);
@@ -49,6 +51,8 @@ std::vector<TargetModel> TargetModelDAO::findByName(const std::string& name) {
             model.longitude = std::stod(row[3]);
             model.latitude = std::stod(row[4]);
             model.altitude = std::stod(row[5]);
+            model.heading = row[6] ? std::stod(row[6]) : 0.0;
+            model.speed = row[7] ? std::stod(row[7]) : 0.0;
             result.push_back(model);
         }
         mysql_free_result(res);
@@ -58,7 +62,7 @@ std::vector<TargetModel> TargetModelDAO::findByName(const std::string& name) {
 
 TargetModel TargetModelDAO::findById(int id) {
     TargetModel model;
-    std::string query = "SELECT id, name, target_type, longitude, latitude, altitude "
+    std::string query = "SELECT id, name, target_type, longitude, latitude, altitude, heading, speed "
                         "FROM target_model WHERE id = " + std::to_string(id);
     
     MYSQL_RES* res = DataManager::getInstance().executeSelectQuery(query);
@@ -71,6 +75,8 @@ TargetModel TargetModelDAO::findById(int id) {
             model.longitude = std::stod(row[3]);
             model.latitude = std::stod(row[4]);
             model.altitude = std::stod(row[5]);
+            model.heading = row[6] ? std::stod(row[6]) : 0.0;
+            model.speed = row[7] ? std::stod(row[7]) : 0.0;
         }
         mysql_free_result(res);
     }
@@ -103,7 +109,9 @@ bool TargetModelDAO::update(const TargetModel& model) {
        << "longitude = " << model.longitude << ", "
        << "latitude = " << model.latitude << ", "
        << "altitude = " << model.altitude << ", "
-       << "position = ST_GeomFromText('POINT(" << model.longitude << " " << model.latitude << ")') "
+       << "position = ST_GeomFromText('POINT(" << model.longitude << " " << model.latitude << ")'), "
+       << "heading = " << model.heading << ", "
+       << "speed = " << model.speed << " "
        << "WHERE id = " << model.id;
     
     return DataManager::getInstance().executeQuery(ss.str());

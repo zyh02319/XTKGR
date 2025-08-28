@@ -13,8 +13,8 @@ DetectionPerformanceView::DetectionPerformanceView(QWidget *parent)
     : QWidget(parent), 
       radarDialog(nullptr),
       jammerDialog(nullptr), targetDialog(nullptr),
-      currentRadar(nullptr), currentJammer(nullptr), currentTarget(nullptr), currentRcs(nullptr),
-      currentFormationJammer(nullptr), currentFormationTarget(nullptr), currentFormationRcs(nullptr)
+      currentRadar(nullptr), currentJammer(nullptr), currentTarget(nullptr),
+      currentFormationJammer(nullptr), currentFormationTarget(nullptr)
 {
     setupUI();
 }
@@ -27,14 +27,14 @@ DetectionPerformanceView::~DetectionPerformanceView() {
     delete currentRadar;
     delete currentJammer;
     delete currentTarget;
-    delete currentRcs;
+    
     for (RadarModel* radarPtr : currentFormationRadars) {
         delete radarPtr;
     }
     currentFormationRadars.clear();
     delete currentFormationJammer;
     delete currentFormationTarget;
-    delete currentFormationRcs;
+    
 }
 
 void DetectionPerformanceView::setupUI() {
@@ -84,7 +84,7 @@ void DetectionPerformanceView::setupSingleEvaluationUI() {
     radarLabel = new QLabel("未选择", this);
     jammerLabel = new QLabel("未选择", this);
     targetLabel = new QLabel("未选择", this);
-    rcsLabel = new QLabel("未选择RCS", this);
+    
     
     QPushButton *radarDetailButton = new QPushButton("查看", this);
     QPushButton *jammerDetailButton = new QPushButton("查看", this);
@@ -102,9 +102,8 @@ void DetectionPerformanceView::setupSingleEvaluationUI() {
     
     modelLayout->addWidget(new QLabel("目标模型:"), 2, 0);
     modelLayout->addWidget(targetLabel, 2, 1);
-    modelLayout->addWidget(rcsLabel, 2, 2);
-    modelLayout->addWidget(selectTargetButton, 2, 3);
-    modelLayout->addWidget(targetDetailButton, 2, 4);
+    modelLayout->addWidget(selectTargetButton, 2, 2);
+    modelLayout->addWidget(targetDetailButton, 2, 3);
     
     modelLayout->addWidget(evaluateButton, 3, 0, 1, 5);
     modelGroup->setLayout(modelLayout);
@@ -164,7 +163,7 @@ void DetectionPerformanceView::setupFormationUI() {
     formationRadarLabel = new QLabel("未选择", this);
     formationJammerLabel = new QLabel("未选择", this);
     formationTargetLabel = new QLabel("未选择", this);
-    formationRcsLabel = new QLabel("未选择RCS", this);
+    
     
     QPushButton *formationRadarDetailButton = new QPushButton("查看", this);
     QPushButton *formationJammerDetailButton = new QPushButton("查看", this);
@@ -183,9 +182,8 @@ void DetectionPerformanceView::setupFormationUI() {
     
     modelLayout->addWidget(new QLabel("目标模型:"), 3, 0);
     modelLayout->addWidget(formationTargetLabel, 3, 1);
-    modelLayout->addWidget(formationRcsLabel, 3, 2);
-    modelLayout->addWidget(selectFormationTargetButton, 3, 3);
-    modelLayout->addWidget(formationTargetDetailButton, 3, 4);
+    modelLayout->addWidget(selectFormationTargetButton, 3, 2);
+    modelLayout->addWidget(formationTargetDetailButton, 3, 3);
     
     modelLayout->addWidget(formationEvaluateButton, 4, 0, 1, 5);
     modelGroup->setLayout(modelLayout);
@@ -284,24 +282,14 @@ void DetectionPerformanceView::onSelectJammer() {
 void DetectionPerformanceView::onSelectTarget() {
     if (!targetDialog) {
         targetDialog = new ModelSelectionDialog(this);
-        targetDialog->setModels(SingleEvaluationController::getAllTargetModels(), true);
+        targetDialog->setModels(SingleEvaluationController::getAllTargetModels(), false);
         connect(targetDialog, &ModelSelectionDialog::modelSelected, [this](const QVariant& model) {
             delete currentTarget;
             currentTarget = new TargetModel(model.value<TargetModel>());
-            
-            // 清空之前的RCS选择
-            delete currentRcs;
-            currentRcs = nullptr;
-            rcsLabel->setText("未选择RCS");
-            
+              
             updateModelDisplay();
         });
-        connect(targetDialog, &ModelSelectionDialog::rcsSelected, [this](const RcsData& rcs) {
-            delete currentRcs;
-            currentRcs = new RcsData(rcs);
-            rcsLabel->setText(QString("方位角: %1°, 俯仰角: %2°, RCS: %3 m²")
-                              .arg(rcs.azimuth).arg(rcs.elevation).arg(rcs.rcs_value));
-        });
+        
     }
     targetDialog->show();
 }
@@ -383,23 +371,12 @@ void DetectionPerformanceView::onSelectFormationJammer() {
 void DetectionPerformanceView::onSelectFormationTarget() {
     if (!targetDialog) {
         targetDialog = new ModelSelectionDialog(this);
-        targetDialog->setModels(SingleEvaluationController::getAllTargetModels(), true);
+        targetDialog->setModels(SingleEvaluationController::getAllTargetModels(), false);
         connect(targetDialog, &ModelSelectionDialog::modelSelected, [this](const QVariant& model) {
             delete currentFormationTarget;
             currentFormationTarget = new TargetModel(model.value<TargetModel>());
             
-            // 清空之前的RCS选择
-            delete currentFormationRcs;
-            currentFormationRcs = nullptr;
-            formationRcsLabel->setText("未选择RCS");
-            
             updateFormationModelDisplay();
-        });
-        connect(targetDialog, &ModelSelectionDialog::rcsSelected, [this](const RcsData& rcs) {
-            delete currentFormationRcs;
-            currentFormationRcs = new RcsData(rcs);
-            formationRcsLabel->setText(QString("方位角: %1°, 俯仰角: %2°, RCS: %3 m²")
-                              .arg(rcs.azimuth).arg(rcs.elevation).arg(rcs.rcs_value));
         });
     }
     targetDialog->show();
@@ -415,8 +392,8 @@ void DetectionPerformanceView::onEvaluate() {
         QMessageBox::warning(this, "错误", "请选择干扰模型");
         return;
     }
-    if (!currentTarget || !currentRcs) {
-        QMessageBox::warning(this, "错误", "请选择目标模型和RCS数据");
+    if (!currentTarget) {
+        QMessageBox::warning(this, "错误", "请选择目标模型");
         return;
     }
     
@@ -434,11 +411,13 @@ void DetectionPerformanceView::onEvaluate() {
         }
         
         // 调用单机评估控制器
+        // 固定RCS=50
+        RcsData fixedRcs; fixedRcs.rcs_value = 50.0; fixedRcs.azimuth = 0; fixedRcs.elevation = 0;
         double resultDistance = SingleEvaluationController::calculateDistance(
             conditionComboBox->currentIndex(),
             *currentRadar,
             (conditionComboBox->currentIndex() == 0) ? defaultJammer : *currentJammer,
-            *currentRcs,
+            fixedRcs,
             distance
         );
         
@@ -466,8 +445,8 @@ void DetectionPerformanceView::onFormationEvaluate() {
         return;
     }
     
-    if (!currentFormationTarget || !currentFormationRcs) {
-        QMessageBox::warning(this, "错误", "请选择目标模型和RCS数据");
+    if (!currentFormationTarget) {
+        QMessageBox::warning(this, "错误", "请选择目标模型");
         return;
     }
     
@@ -478,12 +457,14 @@ void DetectionPerformanceView::onFormationEvaluate() {
         for (RadarModel* ptr : currentFormationRadars) {
             if (ptr) radars.push_back(*ptr);
         }
+        // 固定RCS=50
+        RcsData fixedRcs; fixedRcs.rcs_value = 50.0; fixedRcs.azimuth = 0; fixedRcs.elevation = 0;
         double distance = FormationEvaluationController::evaluateFormation(
             formationConditionComboBox->currentIndex(),
             radars,
             currentFormationJammer,
             *currentFormationTarget,
-            *currentFormationRcs
+            fixedRcs
         );
         
         formationResultLabel->setText(QString("探测距离: %1 米").arg(distance, 0, 'f', 2));
@@ -526,7 +507,9 @@ void DetectionPerformanceView::showRadarDetails() {
                                  "信号带宽: %4 MHz\n"
                                  "天线增益: %5 dB\n"
                                  "系统损耗因子: %6\n"
-                                 "位置: (%7, %8, %9)")
+                                 "位置: (%7, %8, %9)\n"
+                                 "航向: %10\n"
+                                 "飞行速度: %11")
                          .arg(QString::fromStdString(currentRadar->name))
                          .arg(currentRadar->wavelength)
                          .arg(currentRadar->power)
@@ -535,7 +518,9 @@ void DetectionPerformanceView::showRadarDetails() {
                          .arg(currentRadar->loss_factor)
                          .arg(currentRadar->longitude)
                          .arg(currentRadar->latitude)
-                         .arg(currentRadar->altitude);
+                         .arg(currentRadar->altitude)
+                         .arg(currentRadar->heading, 0, 'f', 2)
+                         .arg(currentRadar->speed, 0, 'f', 2);
         QMessageBox::information(this, "雷达模型详情", details);
     }
 }
@@ -547,7 +532,9 @@ void DetectionPerformanceView::showJammerDetails() {
                                  "干扰功率: %3 W\n"
                                  "干扰带宽: %4 MHz\n"
                                  "干扰增益: %5 dB\n"
-                                 "位置: (%6, %7, %8)")
+                                 "位置: (%6, %7, %8)\n"
+                                 "航向: %9\n"
+                                 "飞行速度: %10")
                          .arg(QString::fromStdString(currentJammer->name))
                          .arg(QString::fromStdString(currentJammer->jamming_type))
                          .arg(currentJammer->power)
@@ -555,7 +542,9 @@ void DetectionPerformanceView::showJammerDetails() {
                          .arg(currentJammer->gain)
                          .arg(currentJammer->longitude)
                          .arg(currentJammer->latitude)
-                         .arg(currentJammer->altitude);
+                         .arg(currentJammer->altitude)
+                         .arg(currentJammer->heading, 0, 'f', 2)
+                         .arg(currentJammer->speed, 0, 'f', 2);
         QMessageBox::information(this, "干扰机模型详情", details);
     }
 }
@@ -564,25 +553,19 @@ void DetectionPerformanceView::showTargetDetails() {
     if (currentTarget) {
         QString details = QString("目标模型: %1\n"
                                  "目标类型: %2\n"
-                                 "位置: (%3, %4, %5)")
+                                 "位置: (%3, %4, %5)\n"
+                                 "航向: %6\n"
+                                 "飞行速度: %7")
                          .arg(QString::fromStdString(currentTarget->name))
                          .arg(QString::fromStdString(currentTarget->target_type))
                          .arg(currentTarget->longitude)
                          .arg(currentTarget->latitude)
-                         .arg(currentTarget->altitude);
+                         .arg(currentTarget->altitude)
+                         .arg(currentTarget->heading, 0, 'f', 2)
+                         .arg(currentTarget->speed, 0, 'f', 2);
                          
         
-        if (currentRcs) {
-            details += QString("\n当前RCS数据:\n"
-                              "方位角: %1°\n"
-                              "俯仰角: %2°\n"
-                              "RCS值: %3 m²")
-                      .arg(currentRcs->azimuth)
-                      .arg(currentRcs->elevation)
-                      .arg(currentRcs->rcs_value);
-        } else {
-            details += "\n未选择RCS数据";
-        }
+        // 不显示RCS信息
         // 如果雷达模型已选择，显示距离
         if (currentRadar) {
             double distance = calculateSpatialDistance(
@@ -631,7 +614,9 @@ void DetectionPerformanceView::showFormationJammerDetails() {
                                  "干扰功率: %3 W\n"
                                  "干扰带宽: %4 MHz\n"
                                  "干扰增益: %5 dB\n"
-                                 "位置: (%6, %7, %8)")
+                                 "位置: (%6, %7, %8)\n"
+                                 "航向: %9\n"
+                                 "飞行速度: %10")
                          .arg(QString::fromStdString(currentFormationJammer->name))
                          .arg(QString::fromStdString(currentFormationJammer->jamming_type))
                          .arg(currentFormationJammer->power)
@@ -639,7 +624,9 @@ void DetectionPerformanceView::showFormationJammerDetails() {
                          .arg(currentFormationJammer->gain)
                          .arg(currentFormationJammer->longitude)
                          .arg(currentFormationJammer->latitude)
-                         .arg(currentFormationJammer->altitude);
+                         .arg(currentFormationJammer->altitude)
+                         .arg(currentFormationJammer->heading, 0, 'f', 2)
+                         .arg(currentFormationJammer->speed, 0, 'f', 2);
         QMessageBox::information(this, "干扰机模型详情", details);
     }
 }
@@ -648,25 +635,19 @@ void DetectionPerformanceView::showFormationTargetDetails() {
     if (currentFormationTarget) {
         QString details = QString("目标模型: %1\n"
                                  "目标类型: %2\n"
-                                 "位置: (%3, %4, %5)")
+                                 "位置: (%3, %4, %5)\n"
+                                 "航向: %6\n"
+                                 "飞行速度: %7")
                          .arg(QString::fromStdString(currentFormationTarget->name))
                          .arg(QString::fromStdString(currentFormationTarget->target_type))
                          .arg(currentFormationTarget->longitude)
                          .arg(currentFormationTarget->latitude)
-                         .arg(currentFormationTarget->altitude);
+                         .arg(currentFormationTarget->altitude)
+                         .arg(currentFormationTarget->heading, 0, 'f', 2)
+                         .arg(currentFormationTarget->speed, 0, 'f', 2);
                          
         
-        if (currentFormationRcs) {
-            details += QString("\n当前RCS数据:\n"
-                              "方位角: %1°\n"
-                              "俯仰角: %2°\n"
-                              "RCS值: %3 m²")
-                      .arg(currentFormationRcs->azimuth)
-                      .arg(currentFormationRcs->elevation)
-                      .arg(currentFormationRcs->rcs_value);
-        } else {
-            details += "\n未选择RCS数据";
-        }
+        // 不显示RCS信息
         
         QMessageBox::information(this, "目标模型详情", details);
     }

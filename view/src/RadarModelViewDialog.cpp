@@ -21,6 +21,8 @@ void RadarModelViewDialog::setupUI(const RadarModel& model) {
     formLayout->addRow("经度:", new QLabel(QString::number(model.longitude, 'f', 6)));
     formLayout->addRow("纬度:", new QLabel(QString::number(model.latitude, 'f', 6)));
     formLayout->addRow("高度:", new QLabel(QString("%1 m").arg(model.altitude)));
+    formLayout->addRow("航向:", new QLabel(QString("%1 °").arg(model.heading)));
+    formLayout->addRow("飞行速度:", new QLabel(QString("%1 km/h").arg(model.speed)));
 
     layout->addLayout(formLayout);
 

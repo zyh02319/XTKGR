@@ -22,5 +22,7 @@ private:
     QDoubleSpinBox *longitudeSpin;
     QDoubleSpinBox *latitudeSpin;
     QDoubleSpinBox *altitudeSpin;
+    QDoubleSpinBox *headingSpin;
+    QDoubleSpinBox *speedSpin;
     RadarModel currentModel;
 };

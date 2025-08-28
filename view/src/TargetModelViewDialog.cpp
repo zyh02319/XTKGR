@@ -28,12 +28,16 @@ void TargetModelViewDialog::initUI() {
                           "类型: %2\n"
                           "经度: %3\n"
                           "纬度: %4\n"
-                          "高度: %5")
+                          "高度: %5\n"
+                          "航向: %6 °\n"
+                          "飞行速度: %7 km/h")
                    .arg(QString::fromStdString(targetModel.targetModel.name))
                    .arg(QString::fromStdString(targetModel.targetModel.target_type))
                    .arg(targetModel.targetModel.longitude)
                    .arg(targetModel.targetModel.latitude)
-                   .arg(targetModel.targetModel.altitude);
+                   .arg(targetModel.targetModel.altitude)
+                   .arg(targetModel.targetModel.heading, 0, 'f', 2)
+                   .arg(targetModel.targetModel.speed, 0, 'f', 2);
     
     modelInfoText->setPlainText(info);
     

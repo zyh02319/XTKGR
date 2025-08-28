@@ -21,6 +21,8 @@ RadarModelEditDialog::RadarModelEditDialog(const RadarModel& model, QWidget *par
     longitudeSpin->setValue(model.longitude);
     latitudeSpin->setValue(model.latitude);
     altitudeSpin->setValue(model.altitude);
+    headingSpin->setValue(model.heading);
+    speedSpin->setValue(model.speed);
 }
 
 void RadarModelEditDialog::setupUI() {
@@ -70,6 +72,18 @@ void RadarModelEditDialog::setupUI() {
     altitudeSpin->setSuffix(" m");
     formLayout->addRow("高度:", altitudeSpin);
 
+    headingSpin = new QDoubleSpinBox(this);
+    headingSpin->setRange(0, 360);
+    headingSpin->setDecimals(2);
+    headingSpin->setSuffix(" °");
+    formLayout->addRow("航向:", headingSpin);
+
+    speedSpin = new QDoubleSpinBox(this);
+    speedSpin->setRange(0, 100000);
+    speedSpin->setDecimals(2);
+    speedSpin->setSuffix(" km/h");
+    formLayout->addRow("飞行速度:", speedSpin);
+
     layout->addLayout(formLayout);
 
     QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
@@ -89,6 +103,8 @@ RadarModel RadarModelEditDialog::getRadarModel() const {
     model.longitude = longitudeSpin->value();
     model.latitude = latitudeSpin->value();
     model.altitude = altitudeSpin->value();
+    model.heading = headingSpin->value();
+    model.speed = speedSpin->value();
     model.id = currentModel.id; // 如果是编辑，需要设置id
     return model;
 }
