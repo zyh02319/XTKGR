@@ -17,6 +17,8 @@ struct RadarModel {
     double longitude;
     double latitude;
     double altitude;
+    double heading;      // 航向(0-360度)
+    double speed;        // 飞行速度(km/h)
 };
 
 // 确保在结构体定义后添加元类型声明

@@ -38,6 +38,8 @@ private:
     QDoubleSpinBox *longitudeSpin;
     QDoubleSpinBox *latitudeSpin;
     QDoubleSpinBox *altitudeSpin;
+    QDoubleSpinBox *headingSpin;
+    QDoubleSpinBox *speedSpin;
     
     QTableWidget *rcsTable;
     QPushButton *editRcsBtn;

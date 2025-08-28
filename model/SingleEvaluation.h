@@ -9,16 +9,13 @@
 class SingleEvaluation {
 public:
     // 无干扰条件下的探测距离 (m)
-    // static double calculateWithoutJam(const RadarModel& radar, const RcsData& rcs);
-    static double calculateWithoutJam(const RadarModel& radar, const RcsData& rcs);
+    static double calculateDistanceWithoutJam(const RadarModel& radar, const RcsData& rcs);
     
-    // 有干扰条件下的探测距离 (m)
-    // static double calculateWithJam(const RadarModel& radar, const JammerModel& jammer, const RcsData& rcs);
-    static double calculateWithJam(const RadarModel& radar, const JammerModel& jammer, const RcsData& rcs, double distance);
+    // 有干扰条件下的探测距离 (m) 
+    static double calculateDistanceWithJam(const RadarModel& radar, const JammerModel& jammer, const RcsData& rcs, double distance);
     
     // 抗干扰条件下的探测距离 (m)
-    // static double calculateWithAntiJam(const RadarModel& radar, const JammerModel& jammer, const RcsData& rcs);
-    static double calculateWithAntiJam(const RadarModel& radar, const JammerModel& jammer, const RcsData& rcs, double distance);
+    static double calculateDistanceWithAntiJam(const RadarModel& radar, const JammerModel& jammer, const RcsData& rcs, double distance);
 };
 
 #endif // SINGLEEVALUATION_H

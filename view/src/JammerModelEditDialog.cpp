@@ -20,6 +20,8 @@ JammerModelEditDialog::JammerModelEditDialog(const JammerModel& model, QWidget *
     longitudeSpin->setValue(model.longitude);
     latitudeSpin->setValue(model.latitude);
     altitudeSpin->setValue(model.altitude);
+    headingSpin->setValue(model.heading);
+    speedSpin->setValue(model.speed);
 }
 
 void JammerModelEditDialog::setupUI() {
@@ -63,6 +65,18 @@ void JammerModelEditDialog::setupUI() {
     altitudeSpin->setSuffix(" m");
     formLayout->addRow("高度:", altitudeSpin);
 
+    headingSpin = new QDoubleSpinBox(this);
+    headingSpin->setRange(0, 360);
+    headingSpin->setDecimals(2);
+    headingSpin->setSuffix(" °");
+    formLayout->addRow("航向:", headingSpin);
+
+    speedSpin = new QDoubleSpinBox(this);
+    speedSpin->setRange(0, 100000);
+    speedSpin->setDecimals(2);
+    speedSpin->setSuffix(" km/h");
+    formLayout->addRow("飞行速度:", speedSpin);
+
     layout->addLayout(formLayout);
 
     QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
@@ -81,6 +95,8 @@ JammerModel JammerModelEditDialog::getJammerModel() const {
     model.longitude = longitudeSpin->value();
     model.latitude = latitudeSpin->value();
     model.altitude = altitudeSpin->value();
+    model.heading = headingSpin->value();
+    model.speed = speedSpin->value();
     // 如果是编辑，需要设置id
     model.id = currentModel.id;
     return model;

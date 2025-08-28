@@ -30,22 +30,6 @@ std::vector<TargetModel> SingleEvaluationController::getAllTargetModels() {
 std::vector<RcsData> SingleEvaluationController::getRcsDataByTargetId(int targetId) {
     return RcsDataDAO::findByTargetId(targetId);
 }
-
-// double SingleEvaluationController::calculateDistance(int condition, 
-//                                                    const RadarModel& radar, 
-//                                                    const JammerModel& jammer, 
-//                                                    const RcsData& rcs) {
-//     switch (condition) {
-//     case 0: // 无干扰
-//         return SingleEvaluation::calculateWithoutJam(radar, rcs);
-//     case 1: // 有干扰
-//         return SingleEvaluation::calculateWithJam(radar, jammer, rcs);
-//     case 2: // 抗干扰
-//         return SingleEvaluation::calculateWithAntiJam(radar, jammer, rcs);
-//     default:
-//         return 0.0;
-//     }
-// }
 double SingleEvaluationController::calculateDistance(int condition, 
                                                    const RadarModel& radar, 
                                                    const JammerModel& jammer, 
@@ -53,11 +37,11 @@ double SingleEvaluationController::calculateDistance(int condition,
                                                    double distance) {  // 添加距离参数
     switch (condition) {
     case 0: // 无干扰
-        return SingleEvaluation::calculateWithoutJam(radar, rcs);
+        return SingleEvaluation::calculateDistanceWithoutJam(radar, rcs);
     case 1: // 有干扰
-        return SingleEvaluation::calculateWithJam(radar, jammer, rcs, distance);
+        return SingleEvaluation::calculateDistanceWithJam(radar, jammer, rcs, distance);
     case 2: // 抗干扰
-        return SingleEvaluation::calculateWithAntiJam(radar, jammer, rcs, distance);
+        return SingleEvaluation::calculateDistanceWithAntiJam(radar, jammer, rcs, distance);
     default:
         return 0.0;
     }

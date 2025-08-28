@@ -2,7 +2,7 @@
 #include "FormationEvaluation.h"
 
 //无干扰条件下
-double FormationEvaluation::calculateWithoutJam(const std::vector<RadarModel>& radars,
+double FormationEvaluation::calculateDistanceWithoutJam(const std::vector<RadarModel>& radars,
                                                   const RcsData& rcs) {
     // 文档依据：无干扰时，目标回波受噪声限制，多站信号叠加增益基于目标回波互不相关特性
     const RadarModel& mainRadar = radars[0];
@@ -44,7 +44,7 @@ double FormationEvaluation::calculateWithoutJam(const std::vector<RadarModel>& r
 }
 
 //干扰条件下
-double FormationEvaluation::calculateWithJam(const std::vector<RadarModel>& radars,
+double FormationEvaluation::calculateDistanceWithJam(const std::vector<RadarModel>& radars,
                                                 const JammerModel& jammer,
                                                 const RcsData& rcs) {
     // 多站雷达基线长度满足L≥λR/D时，目标回波互不相关，干扰信号强相关
@@ -86,7 +86,7 @@ double FormationEvaluation::calculateWithJam(const std::vector<RadarModel>& rada
     return pow(numerator / denominator, 0.25);
 }
 //抗干扰条件下
-double FormationEvaluation::calculateWithAntiJam(const std::vector<RadarModel>& radars,
+double FormationEvaluation::calculateDistanceWithAntiJam(const std::vector<RadarModel>& radars,
                                                 const JammerModel& jammer,
                                                 const RcsData& rcs) {
     const RadarModel& mainRadar = radars[0];

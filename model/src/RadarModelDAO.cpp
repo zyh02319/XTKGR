@@ -28,7 +28,7 @@ std::vector<std::pair<int, std::string>> RadarModelDAO::searchRadarNamesAndIdsBy
 //增加
 bool RadarModelDAO::insert(const RadarModel& model) {
     std::stringstream ss;
-    ss << "INSERT INTO radar_model (name, wavelength, power, bandwidth, gain, loss_factor, longitude, latitude, altitude, position) "
+    ss << "INSERT INTO radar_model (name, wavelength, power, bandwidth, gain, loss_factor, longitude, latitude, altitude, position, heading, speed) "
        << "VALUES ('" << DataManager::getInstance().escapeString(model.name) << "', "
        << model.wavelength << ", "
        << model.power << ", "
@@ -38,7 +38,9 @@ bool RadarModelDAO::insert(const RadarModel& model) {
        << model.longitude << ", "
        << model.latitude << ", "
        << model.altitude << ", "
-       << "ST_GeomFromText('POINT(" << model.longitude << " " << model.latitude << ")'))";
+       << "ST_GeomFromText('POINT(" << model.longitude << " " << model.latitude << ")'), "
+       << model.heading << ", "
+       << model.speed << ")";
     
     return DataManager::getInstance().executeQuery(ss.str());
 }
@@ -61,7 +63,7 @@ std::vector<std::pair<int, std::string>> RadarModelDAO::getAllRadarNamesAndIds()
 std::vector<RadarModel> RadarModelDAO::findByName(const std::string& name) {
     std::vector<RadarModel> result;
     std::string escapedName = DataManager::getInstance().escapeString(name);
-    std::string query = "SELECT id, name, wavelength, power, bandwidth, gain, loss_factor, longitude, latitude, altitude "
+    std::string query = "SELECT id, name, wavelength, power, bandwidth, gain, loss_factor, longitude, latitude, altitude, heading, speed "
                         "FROM radar_model WHERE name = '" + escapedName + "'";
     
     MYSQL_RES* res = DataManager::getInstance().executeSelectQuery(query);
@@ -79,6 +81,8 @@ std::vector<RadarModel> RadarModelDAO::findByName(const std::string& name) {
             model.longitude = std::stod(row[7]);
             model.latitude = std::stod(row[8]);
             model.altitude = std::stod(row[9]);
+            model.heading = row[10] ? std::stod(row[10]) : 0.0;
+            model.speed = row[11] ? std::stod(row[11]) : 0.0;
             result.push_back(model);
         }
         mysql_free_result(res);
@@ -88,7 +92,7 @@ std::vector<RadarModel> RadarModelDAO::findByName(const std::string& name) {
 //通过ID查找
 RadarModel RadarModelDAO::findById(int id) {
     RadarModel model;
-    std::string query = "SELECT id, name, wavelength, power, bandwidth, gain, loss_factor, longitude, latitude, altitude "
+    std::string query = "SELECT id, name, wavelength, power, bandwidth, gain, loss_factor, longitude, latitude, altitude, heading, speed "
                         "FROM radar_model WHERE id = " + std::to_string(id);
     
     MYSQL_RES* res = DataManager::getInstance().executeSelectQuery(query);
@@ -105,6 +109,8 @@ RadarModel RadarModelDAO::findById(int id) {
             model.longitude = std::stod(row[7]);
             model.latitude = std::stod(row[8]);
             model.altitude = std::stod(row[9]);
+            model.heading = row[10] ? std::stod(row[10]) : 0.0;
+            model.speed = row[11] ? std::stod(row[11]) : 0.0;
         }
         mysql_free_result(res);
     }
@@ -128,7 +134,9 @@ bool RadarModelDAO::update(const RadarModel& model) {
        << "longitude = " << model.longitude << ", "
        << "latitude = " << model.latitude << ", "
        << "altitude = " << model.altitude << ", "
-       << "position = ST_GeomFromText('POINT(" << model.longitude << " " << model.latitude << ")') "
+       << "position = ST_GeomFromText('POINT(" << model.longitude << " " << model.latitude << ")'), "
+       << "heading = " << model.heading << ", "
+       << "speed = " << model.speed << " "
        << "WHERE id = " << model.id;
     
     return DataManager::getInstance().executeQuery(ss.str());

@@ -29,7 +29,7 @@ bool JammerModelDAO::insert(const JammerModel& model) {
     DataManager& dm = DataManager::getInstance();
     
     std::stringstream ss;
-    ss << "INSERT INTO jammer_model (name, jamming_type, power, bandwidth, gain, longitude, latitude, altitude, position) "
+    ss << "INSERT INTO jammer_model (name, jamming_type, power, bandwidth, gain, longitude, latitude, altitude, position, heading, speed) "
        << "VALUES ('" << dm.escapeString(model.name) << "', "
        << "'" << dm.escapeString(model.jamming_type) << "', "  // 确保转义
        << model.power << ", "
@@ -38,7 +38,11 @@ bool JammerModelDAO::insert(const JammerModel& model) {
        << model.longitude << ", "
        << model.latitude << ", "
        << model.altitude << ", "
-       << "ST_GeomFromText('POINT(" << model.longitude << " " << model.latitude << ")'))";
+        << "ST_GeomFromText('POINT(" 
+        << std::fixed << std::setprecision(6) << model.longitude << " " 
+        << std::fixed << std::setprecision(6) << model.latitude << ")'), "
+       << model.heading << ", "
+       << model.speed << ")";
     
     std::string query = ss.str();
     std::cout << "Executing query: " << query << std::endl;  // 添加调试输出
@@ -64,7 +68,7 @@ std::vector<std::pair<int, std::string>> JammerModelDAO::getAllJammerNamesAndIds
 std::vector<JammerModel> JammerModelDAO::findByName(const std::string& name) {
     std::vector<JammerModel> result;
     std::string escapedName = DataManager::getInstance().escapeString(name);
-    std::string query = "SELECT id, name, jamming_type, power, bandwidth, gain, longitude, latitude, altitude "
+    std::string query = "SELECT id, name, jamming_type, power, bandwidth, gain, longitude, latitude, altitude, heading, speed "
                         "FROM jammer_model WHERE name = '" + escapedName + "'";
     
     MYSQL_RES* res = DataManager::getInstance().executeSelectQuery(query);
@@ -81,6 +85,8 @@ std::vector<JammerModel> JammerModelDAO::findByName(const std::string& name) {
             model.longitude = std::stod(row[6]);
             model.latitude = std::stod(row[7]);
             model.altitude = std::stod(row[8]);
+            model.heading = row[9] ? std::stod(row[9]) : 0.0;
+            model.speed = row[10] ? std::stod(row[10]) : 0.0;
             result.push_back(model);
         }
         mysql_free_result(res);
@@ -90,7 +96,7 @@ std::vector<JammerModel> JammerModelDAO::findByName(const std::string& name) {
 //通过ID进行查找
 JammerModel JammerModelDAO::findById(int id) {
     JammerModel model;
-    std::string query = "SELECT id, name, jamming_type, power, bandwidth, gain, longitude, latitude, altitude "
+    std::string query = "SELECT id, name, jamming_type, power, bandwidth, gain, longitude, latitude, altitude, heading, speed "
                         "FROM jammer_model WHERE id = " + std::to_string(id);
     
     MYSQL_RES* res = DataManager::getInstance().executeSelectQuery(query);
@@ -106,6 +112,8 @@ JammerModel JammerModelDAO::findById(int id) {
             model.longitude = std::stod(row[6]);
             model.latitude = std::stod(row[7]);
             model.altitude = std::stod(row[8]);
+            model.heading = row[9] ? std::stod(row[9]) : 0.0;
+            model.speed = row[10] ? std::stod(row[10]) : 0.0;
         }
         mysql_free_result(res);
     }
@@ -148,7 +156,9 @@ bool JammerModelDAO::update(const JammerModel& model) {
        << "altitude = " << model.altitude << ", "
        << "position = ST_GeomFromText('POINT(" 
        << std::fixed << std::setprecision(6) << model.longitude << " " 
-       << std::fixed << std::setprecision(6) << model.latitude << ")') "
+       << std::fixed << std::setprecision(6) << model.latitude << ")'), "
+       << "heading = " << model.heading << ", "
+       << "speed = " << model.speed << " "
        << "WHERE id = " << model.id;
     
     return DataManager::getInstance().executeQuery(ss.str());
