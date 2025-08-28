@@ -7,13 +7,13 @@
 #include <cmath>
 #include <QGridLayout>
 #include <QGroupBox>
+#include <QStringList>
 
 DetectionPerformanceView::DetectionPerformanceView(QWidget *parent)
     : QWidget(parent), 
-      radarDialogForTransmitter(nullptr), radarDialogForReceiver(nullptr),
+      radarDialog(nullptr),
       jammerDialog(nullptr), targetDialog(nullptr),
       currentRadar(nullptr), currentJammer(nullptr), currentTarget(nullptr), currentRcs(nullptr),
-      currentTransmitter(nullptr), currentReceiver(nullptr), 
       currentFormationJammer(nullptr), currentFormationTarget(nullptr), currentFormationRcs(nullptr)
 {
     setupUI();
@@ -21,16 +21,17 @@ DetectionPerformanceView::DetectionPerformanceView(QWidget *parent)
 
 
 DetectionPerformanceView::~DetectionPerformanceView() {
-    delete radarDialogForTransmitter;
-    delete radarDialogForReceiver;
+    delete radarDialog;
     delete jammerDialog;
     delete targetDialog;
     delete currentRadar;
     delete currentJammer;
     delete currentTarget;
     delete currentRcs;
-    delete currentTransmitter;
-    delete currentReceiver;
+    for (RadarModel* radarPtr : currentFormationRadars) {
+        delete radarPtr;
+    }
+    currentFormationRadars.clear();
     delete currentFormationJammer;
     delete currentFormationTarget;
     delete currentFormationRcs;
@@ -56,7 +57,7 @@ void DetectionPerformanceView::setupUI() {
     
     mainLayout->addWidget(tabWidget);
 }
-
+//单机评估页面
 void DetectionPerformanceView::setupSingleEvaluationUI() {
     QVBoxLayout *singleLayout = new QVBoxLayout(singleEvaluationTab);
     
@@ -135,7 +136,7 @@ void DetectionPerformanceView::setupSingleEvaluationUI() {
     // 初始化状态
     onConditionChanged(0);
 }
-
+//编队评估页面
 void DetectionPerformanceView::setupFormationUI() {
     QVBoxLayout *formationLayout = new QVBoxLayout(formationEvaluationTab);
     
@@ -154,32 +155,26 @@ void DetectionPerformanceView::setupFormationUI() {
     QGroupBox *modelGroup = new QGroupBox("模型选择", this);
     QGridLayout *modelLayout = new QGridLayout;
     
-    selectTransmitterButton = new QPushButton("选择发射站", this);
-    selectReceiverButton = new QPushButton("选择接收站", this);
+    selectFormationRadarButton = new QPushButton("选择雷达模型", this);
+    addFormationRadarButton = new QPushButton("增加", this);
     selectFormationJammerButton = new QPushButton("选择干扰模型", this);
     selectFormationTargetButton = new QPushButton("选择目标模型", this);
     formationEvaluateButton = new QPushButton("评估", this);
     
-    transmitterLabel = new QLabel("未选择", this);
-    receiverLabel = new QLabel("未选择", this);
+    formationRadarLabel = new QLabel("未选择", this);
     formationJammerLabel = new QLabel("未选择", this);
     formationTargetLabel = new QLabel("未选择", this);
     formationRcsLabel = new QLabel("未选择RCS", this);
     
-    QPushButton *transmitterDetailButton = new QPushButton("查看", this);
-    QPushButton *receiverDetailButton = new QPushButton("查看", this);
+    QPushButton *formationRadarDetailButton = new QPushButton("查看", this);
     QPushButton *formationJammerDetailButton = new QPushButton("查看", this);
     QPushButton *formationTargetDetailButton = new QPushButton("查看", this);
     
-    modelLayout->addWidget(new QLabel("发射站:"), 0, 0);
-    modelLayout->addWidget(transmitterLabel, 0, 1);
-    modelLayout->addWidget(selectTransmitterButton, 0, 2);
-    modelLayout->addWidget(transmitterDetailButton, 0, 3);
-    
-    modelLayout->addWidget(new QLabel("接收站:"), 1, 0);
-    modelLayout->addWidget(receiverLabel, 1, 1);
-    modelLayout->addWidget(selectReceiverButton, 1, 2);
-    modelLayout->addWidget(receiverDetailButton, 1, 3);
+    modelLayout->addWidget(new QLabel("雷达模型:"), 0, 0);
+    modelLayout->addWidget(formationRadarLabel, 0, 1);
+    modelLayout->addWidget(selectFormationRadarButton, 0, 2);
+    modelLayout->addWidget(formationRadarDetailButton, 0, 3);
+    modelLayout->addWidget(addFormationRadarButton, 0, 4);
     
     modelLayout->addWidget(new QLabel("干扰模型:"), 2, 0);
     modelLayout->addWidget(formationJammerLabel, 2, 1);
@@ -211,20 +206,18 @@ void DetectionPerformanceView::setupFormationUI() {
     // 连接信号槽
     connect(formationConditionComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &DetectionPerformanceView::onFormationConditionChanged);
-    connect(selectTransmitterButton, &QPushButton::clicked, 
-            this, &DetectionPerformanceView::onSelectTransmitter);
-    connect(selectReceiverButton, &QPushButton::clicked, 
-            this, &DetectionPerformanceView::onSelectReceiver);
+    connect(selectFormationRadarButton, &QPushButton::clicked, 
+            this, &DetectionPerformanceView::onSelectFormationRadar);
+    connect(addFormationRadarButton, &QPushButton::clicked,
+            this, &DetectionPerformanceView::onAddFormationRadar);
     connect(selectFormationJammerButton, &QPushButton::clicked, 
             this, &DetectionPerformanceView::onSelectFormationJammer);
     connect(selectFormationTargetButton, &QPushButton::clicked, 
             this, &DetectionPerformanceView::onSelectFormationTarget);
     connect(formationEvaluateButton, &QPushButton::clicked, 
             this, &DetectionPerformanceView::onFormationEvaluate);
-    connect(transmitterDetailButton, &QPushButton::clicked, 
-            this, &DetectionPerformanceView::showTransmitterDetails);
-    connect(receiverDetailButton, &QPushButton::clicked, 
-            this, &DetectionPerformanceView::showReceiverDetails);
+    connect(formationRadarDetailButton, &QPushButton::clicked, 
+            this, &DetectionPerformanceView::showFormationRadarDetails);
     connect(formationJammerDetailButton, &QPushButton::clicked, 
             this, &DetectionPerformanceView::showFormationJammerDetails);
     connect(formationTargetDetailButton, &QPushButton::clicked, 
@@ -232,6 +225,7 @@ void DetectionPerformanceView::setupFormationUI() {
     
     // 初始状态
     onFormationConditionChanged(0);
+    updateFormationModelDisplay();
 }
 
 void DetectionPerformanceView::onConditionChanged(int index) {
@@ -262,16 +256,16 @@ void DetectionPerformanceView::onFormationConditionChanged(int index) {
 }
 
 void DetectionPerformanceView::onSelectRadar() {
-    if (!radarDialogForTransmitter) {
-        radarDialogForTransmitter = new ModelSelectionDialog(this);
-        radarDialogForTransmitter->setModels(SingleEvaluationController::getAllRadarModels());
-        connect(radarDialogForTransmitter, &ModelSelectionDialog::modelSelected, [this](const QVariant& model) {
+    if (!radarDialog) {
+        radarDialog = new ModelSelectionDialog(this);
+        radarDialog->setModels(SingleEvaluationController::getAllRadarModels());
+        connect(radarDialog, &ModelSelectionDialog::modelSelected, [this](const QVariant& model) {
             delete currentRadar;
             currentRadar = new RadarModel(model.value<RadarModel>());
             updateModelDisplay();
         });
     }
-    radarDialogForTransmitter->show();
+    radarDialog->show();
 }
 
 void DetectionPerformanceView::onSelectJammer() {
@@ -312,30 +306,65 @@ void DetectionPerformanceView::onSelectTarget() {
     targetDialog->show();
 }
 
-void DetectionPerformanceView::onSelectTransmitter() {
-    if (!radarDialogForTransmitter) {
-        radarDialogForTransmitter = new ModelSelectionDialog(this);
-        radarDialogForTransmitter->setModels(SingleEvaluationController::getAllRadarModels());
-        connect(radarDialogForTransmitter, &ModelSelectionDialog::modelSelected, [this](const QVariant& model) {
-            delete currentTransmitter;
-            currentTransmitter = new RadarModel(model.value<RadarModel>());
+void DetectionPerformanceView::onSelectFormationRadar() {
+    isAddingFormationRadar = false;
+    if (!radarDialogForFormationRadar) {
+        radarDialogForFormationRadar = new ModelSelectionDialog(this);
+        radarDialogForFormationRadar->setModels(SingleEvaluationController::getAllRadarModels());
+        connect(radarDialogForFormationRadar, &ModelSelectionDialog::modelSelected, [this](const QVariant& model) {
+            RadarModel* newRadar = new RadarModel(model.value<RadarModel>());
+            if (isAddingFormationRadar) {
+                if (static_cast<int>(currentFormationRadars.size()) >= 4) {
+                    QMessageBox::warning(this, "提示", "最多可选择四个雷达模型");
+                    delete newRadar;
+                    return;
+                }
+                currentFormationRadars.push_back(newRadar);
+            } else {
+                if (currentFormationRadars.empty()) {
+                    currentFormationRadars.push_back(newRadar);
+                } else {
+                    delete currentFormationRadars[0];
+                    currentFormationRadars[0] = newRadar;
+                }
+            }
             updateFormationModelDisplay();
         });
     }
-    radarDialogForTransmitter->show();
+    radarDialogForFormationRadar->show();
 }
 
-void DetectionPerformanceView::onSelectReceiver() {
-    if (!radarDialogForReceiver) {
-        radarDialogForReceiver = new ModelSelectionDialog(this);
-        radarDialogForReceiver->setModels(SingleEvaluationController::getAllRadarModels());
-        connect(radarDialogForReceiver, &ModelSelectionDialog::modelSelected, [this](const QVariant& model) {
-            delete currentReceiver;
-            currentReceiver = new RadarModel(model.value<RadarModel>());
+void DetectionPerformanceView::onAddFormationRadar() {
+    if (static_cast<int>(currentFormationRadars.size()) >= 4) {
+        QMessageBox::warning(this, "提示", "最多可选择四个雷达模型");
+        return;
+    }
+    isAddingFormationRadar = true;
+    if (!radarDialogForFormationRadar) {
+        // 创建时会绑定统一的回调，回调里依据 isAddingFormationRadar 判断追加或替换
+        radarDialogForFormationRadar = new ModelSelectionDialog(this);
+        radarDialogForFormationRadar->setModels(SingleEvaluationController::getAllRadarModels());
+        connect(radarDialogForFormationRadar, &ModelSelectionDialog::modelSelected, [this](const QVariant& model) {
+            RadarModel* newRadar = new RadarModel(model.value<RadarModel>());
+            if (isAddingFormationRadar) {
+                if (static_cast<int>(currentFormationRadars.size()) >= 4) {
+                    QMessageBox::warning(this, "提示", "最多可选择四个雷达模型");
+                    delete newRadar;
+                    return;
+                }
+                currentFormationRadars.push_back(newRadar);
+            } else {
+                if (currentFormationRadars.empty()) {
+                    currentFormationRadars.push_back(newRadar);
+                } else {
+                    delete currentFormationRadars[0];
+                    currentFormationRadars[0] = newRadar;
+                }
+            }
             updateFormationModelDisplay();
         });
     }
-    radarDialogForReceiver->show();
+    radarDialogForFormationRadar->show();
 }
 
 void DetectionPerformanceView::onSelectFormationJammer() {
@@ -423,12 +452,12 @@ void DetectionPerformanceView::onEvaluate() {
 
 void DetectionPerformanceView::onFormationEvaluate() {
     // 验证输入
-    if (!currentTransmitter) {
-        QMessageBox::warning(this, "错误", "请选择发射站模型");
+    if (static_cast<int>(currentFormationRadars.size()) < 2) {
+        QMessageBox::warning(this, "错误", "请至少选择两个雷达模型");
         return;
     }
-    if (!currentReceiver) {
-        QMessageBox::warning(this, "错误", "请选择接收站模型");
+    if (static_cast<int>(currentFormationRadars.size()) > 4) {
+        QMessageBox::warning(this, "错误", "最多选择四个雷达模型");
         return;
     }
     
@@ -443,11 +472,15 @@ void DetectionPerformanceView::onFormationEvaluate() {
     }
     
     try {
-        // 调用编队评估控制器 - 直接传递干扰条件
+        // 将指针集合拷贝为值集合
+        std::vector<RadarModel> radars;
+        radars.reserve(currentFormationRadars.size());
+        for (RadarModel* ptr : currentFormationRadars) {
+            if (ptr) radars.push_back(*ptr);
+        }
         double distance = FormationEvaluationController::evaluateFormation(
             formationConditionComboBox->currentIndex(),
-            *currentTransmitter,
-            *currentReceiver,
+            radars,
             currentFormationJammer,
             *currentFormationTarget,
             *currentFormationRcs
@@ -468,10 +501,17 @@ void DetectionPerformanceView::updateModelDisplay() {
 }
 
 void DetectionPerformanceView::updateFormationModelDisplay() {
-    transmitterLabel->setText(currentTransmitter ? 
-        QString::fromStdString(currentTransmitter->name) : "未选择");
-    receiverLabel->setText(currentReceiver ? 
-        QString::fromStdString(currentReceiver->name) : "未选择");
+    if (currentFormationRadars.empty()) {
+        formationRadarLabel->setText("未选择");
+    } else {
+        QStringList names;
+        for (size_t i = 0; i < currentFormationRadars.size(); ++i) {
+            RadarModel* ptr = currentFormationRadars[i];
+            if (ptr) names << QString::fromStdString(ptr->name);
+        }
+        formationRadarLabel->setText(QString("%1 (已选%2/4)").arg(names.join("，")).arg(currentFormationRadars.size()));
+    }
+    addFormationRadarButton->setEnabled(static_cast<int>(currentFormationRadars.size()) < 4);
     formationJammerLabel->setText(currentFormationJammer ? 
         QString::fromStdString(currentFormationJammer->name) : "未选择");
     formationTargetLabel->setText(currentFormationTarget ? 
@@ -556,57 +596,31 @@ void DetectionPerformanceView::showTargetDetails() {
     }
 }
 
-void DetectionPerformanceView::showTransmitterDetails() {
-    if (currentTransmitter) {
-        QString details = QString("发射站模型: %1\n"
-                                 "波长: %2 m\n"
-                                 "发射功率: %3 KW\n"
-                                 "信号带宽: %4 MHz\n"
-                                 "天线增益: %5 dB\n"
-                                 "系统损耗因子: %6\n"
-                                 "位置: (%7, %8, %9)")
-                         .arg(QString::fromStdString(currentTransmitter->name))
-                         .arg(currentTransmitter->wavelength)
-                         .arg(currentTransmitter->power)
-                         .arg(currentTransmitter->bandwidth)
-                         .arg(currentTransmitter->gain)
-                         .arg(currentTransmitter->loss_factor)
-                         .arg(currentTransmitter->longitude)
-                         .arg(currentTransmitter->latitude)
-                         .arg(currentTransmitter->altitude);
-        QMessageBox::information(this, "发射站详情", details);
-    }
-}
-
-void DetectionPerformanceView::showReceiverDetails() {
-    if (currentReceiver) {
-        QString details = QString("接收站模型: %1\n"
-                                 "波长: %2 m\n"
-                                 "发射功率: %3 KW\n"
-                                 "信号带宽: %4 MHz\n"
-                                 "天线增益: %5 dB\n"
-                                 "系统损耗因子: %6\n"
-                                 "位置: (%7, %8, %9)")
-                         .arg(QString::fromStdString(currentReceiver->name))
-                         .arg(currentReceiver->wavelength)
-                         .arg(currentReceiver->power)
-                         .arg(currentReceiver->bandwidth)
-                         .arg(currentReceiver->gain)
-                         .arg(currentReceiver->loss_factor)
-                         .arg(currentReceiver->longitude)
-                         .arg(currentReceiver->latitude)
-                         .arg(currentReceiver->altitude);
-        
-        // 显示与发射站的距离
-        if (currentTransmitter) {
-            double distance = calculateSpatialDistance(
-                currentTransmitter->longitude, currentTransmitter->latitude, currentTransmitter->altitude,
-                currentReceiver->longitude, currentReceiver->latitude, currentReceiver->altitude
-            );
-            details += QString("\n与发射站距离: %1 米").arg(distance, 0, 'f', 2);
+void DetectionPerformanceView::showFormationRadarDetails() {
+    if (!currentFormationRadars.empty()) {
+        QString details;
+        for (size_t i = 0; i < currentFormationRadars.size(); ++i) {
+            RadarModel* r = currentFormationRadars[i];
+            if (!r) continue;
+            details += QString("[%1] 雷达模型: %2\n"
+                               "波长: %3 m\n"
+                               "发射功率: %4 KW\n"
+                               "信号带宽: %5 MHz\n"
+                               "天线增益: %6 dB\n"
+                               "系统损耗因子: %7\n"
+                               "位置: (%8, %9, %10)\n\n")
+                       .arg(i + 1)
+                       .arg(QString::fromStdString(r->name))
+                       .arg(r->wavelength)
+                       .arg(r->power)
+                       .arg(r->bandwidth)
+                       .arg(r->gain)
+                       .arg(r->loss_factor)
+                       .arg(r->longitude)
+                       .arg(r->latitude)
+                       .arg(r->altitude);
         }
-        
-        QMessageBox::information(this, "接收站详情", details);
+        QMessageBox::information(this, "雷达模型详情", details);
     }
 }
 
@@ -652,23 +666,6 @@ void DetectionPerformanceView::showFormationTargetDetails() {
                       .arg(currentFormationRcs->rcs_value);
         } else {
             details += "\n未选择RCS数据";
-        }
-        
-        // 显示与发射站和接收站的距离
-        if (currentTransmitter) {
-            double txDistance = calculateSpatialDistance(
-                currentTransmitter->longitude, currentTransmitter->latitude, currentTransmitter->altitude,
-                currentFormationTarget->longitude, currentFormationTarget->latitude, currentFormationTarget->altitude
-            );
-            details += QString("\n与发射站距离: %1 米").arg(txDistance, 0, 'f', 2);
-        }
-        
-        if (currentReceiver) {
-            double rxDistance = calculateSpatialDistance(
-                currentReceiver->longitude, currentReceiver->latitude, currentReceiver->altitude,
-                currentFormationTarget->longitude, currentFormationTarget->latitude, currentFormationTarget->altitude
-            );
-            details += QString("\n与接收站距离: %1 米").arg(rxDistance, 0, 'f', 2);
         }
         
         QMessageBox::information(this, "目标模型详情", details);

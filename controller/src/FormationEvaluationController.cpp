@@ -4,17 +4,11 @@
 
 double FormationEvaluationController::evaluateFormation(
     int condition,
-    const RadarModel& transmitter,
-    const RadarModel& receiver,
+    const std::vector<RadarModel>& radars,
     const JammerModel* jammer,
     const TargetModel& target,
     const RcsData& rcs) 
 {
-    // 创建雷达数组，包含发射机和接收机
-    std::vector<RadarModel> radars;
-    radars.push_back(transmitter);
-    radars.push_back(receiver);
-    
     // 根据干扰条件选择算法
     switch (condition) {
     case 0: // 无干扰
