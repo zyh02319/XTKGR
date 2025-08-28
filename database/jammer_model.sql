@@ -16,3 +16,6 @@ CREATE TABLE jammer_model (
 
 -- 空间索引优化地理查询
 CREATE INDEX idx_jammer_location ON jammer_model (longitude, latitude);
+ALTER TABLE jammer_model 
+ADD COLUMN heading DECIMAL(5,2) COMMENT '航向(0-360度)' AFTER position,
+ADD COLUMN speed DECIMAL(8,2) COMMENT '飞行速度(km/h)' AFTER heading;
