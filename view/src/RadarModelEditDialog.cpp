@@ -17,7 +17,7 @@ RadarModelEditDialog::RadarModelEditDialog(const RadarModel& model, QWidget *par
     powerSpin->setValue(model.power);
     bandwidthSpin->setValue(model.bandwidth);
     gainSpin->setValue(model.gain);
-    lossFactorSpin->setValue(model.loss_factor);
+    // lossFactorSpin->setValue(model.loss_factor);
     longitudeSpin->setValue(model.longitude);
     latitudeSpin->setValue(model.latitude);
     altitudeSpin->setValue(model.altitude);
@@ -52,10 +52,10 @@ void RadarModelEditDialog::setupUI() {
     gainSpin->setSuffix(" dB");
     formLayout->addRow("增益:", gainSpin);
 
-    lossFactorSpin = new QDoubleSpinBox(this);
-    lossFactorSpin->setRange(0, 100);
-    lossFactorSpin->setSuffix(" dB");
-    formLayout->addRow("损耗因子:", lossFactorSpin);
+    // lossFactorSpin = new QDoubleSpinBox(this);
+    // lossFactorSpin->setRange(0, 100);
+    // lossFactorSpin->setSuffix(" dB");
+    // formLayout->addRow("损耗因子:", lossFactorSpin);
 
     longitudeSpin = new QDoubleSpinBox(this);
     longitudeSpin->setRange(-180, 180);
@@ -99,7 +99,7 @@ RadarModel RadarModelEditDialog::getRadarModel() const {
     model.power = powerSpin->value();
     model.bandwidth = bandwidthSpin->value();
     model.gain = gainSpin->value();
-    model.loss_factor = lossFactorSpin->value();
+    // model.loss_factor = lossFactorSpin->value();
     model.longitude = longitudeSpin->value();
     model.latitude = latitudeSpin->value();
     model.altitude = altitudeSpin->value();

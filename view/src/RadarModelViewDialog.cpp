@@ -9,6 +9,7 @@ RadarModelViewDialog::RadarModelViewDialog(const RadarModel& model, QWidget *par
 }
 
 void RadarModelViewDialog::setupUI(const RadarModel& model) {
+    setWindowTitle("探测模型");
     QVBoxLayout *layout = new QVBoxLayout(this);
     QFormLayout *formLayout = new QFormLayout;
 
@@ -17,7 +18,7 @@ void RadarModelViewDialog::setupUI(const RadarModel& model) {
     formLayout->addRow("功率:", new QLabel(QString("%1 W").arg(model.power)));
     formLayout->addRow("带宽:", new QLabel(QString("%1 MHz").arg(model.bandwidth)));
     formLayout->addRow("增益:", new QLabel(QString("%1 dB").arg(model.gain)));
-    formLayout->addRow("损耗因子:", new QLabel(QString("%1 dB").arg(model.loss_factor)));
+    // formLayout->addRow("损耗因子:", new QLabel(QString("%1 dB").arg(model.loss_factor)));
     formLayout->addRow("经度:", new QLabel(QString::number(model.longitude, 'f', 6)));
     formLayout->addRow("纬度:", new QLabel(QString::number(model.latitude, 'f', 6)));
     formLayout->addRow("高度:", new QLabel(QString("%1 m").arg(model.altitude)));

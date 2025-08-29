@@ -38,18 +38,11 @@ JammerModel ModelManageController::getJammerModelById(int id) {
 
 //改进后，获取全部的名字和ID
 std::vector<std::pair<int, std::string>> ModelManageController::getAllJammerNamesAndIds() {
-    std::cout << "[ModelManageController] getAllJammerNamesAndIds called." << std::endl;
     return JammerModelDAO::getAllJammerNamesAndIds();
 }
 
-
-// std::vector<JammerModel> ModelManageController::searchJammerModelsByName(const std::string& name) {
-//     std::cout << "[ModelManageController] searchJammerModelsByName called for name: " << name << std::endl;
-//     return JammerModelDAO::findByName(name);
-// }
 // 按名称搜索干扰机模型，只返回名称和ID
 std::vector<std::pair<int, std::string>> ModelManageController::searchJammerModelsByName(const std::string& name) {
-    std::cout << "[ModelManageController] searchJammerModelsByName called for name: " << name << std::endl;
     return JammerModelDAO::searchJammerNamesAndIdsByName(name);
 }
 

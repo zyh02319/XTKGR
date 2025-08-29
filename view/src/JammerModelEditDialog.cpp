@@ -38,17 +38,17 @@ void JammerModelEditDialog::setupUI() {
     powerSpin = new QDoubleSpinBox(this);
     powerSpin->setRange(0, 10000);
     powerSpin->setSuffix(" W");
-    formLayout->addRow("功率:", powerSpin);
+    formLayout->addRow("干扰功率:", powerSpin);
 
     bandwidthSpin = new QDoubleSpinBox(this);
     bandwidthSpin->setRange(0, 10000);
     bandwidthSpin->setSuffix(" MHz");
-    formLayout->addRow("带宽:", bandwidthSpin);
+    formLayout->addRow("干扰带宽:", bandwidthSpin);
 
     gainSpin = new QDoubleSpinBox(this);
     gainSpin->setRange(0, 100);
     gainSpin->setSuffix(" dB");
-    formLayout->addRow("增益:", gainSpin);
+    formLayout->addRow("干扰增益:", gainSpin);
 
     longitudeSpin = new QDoubleSpinBox(this);
     longitudeSpin->setRange(-180, 180);

@@ -10,30 +10,12 @@ DataManager::~DataManager() {
 }
 
 DataManager& DataManager::getInstance() {
-    std::cout << "[DataManager] getInstance called." << std::endl;
     static DataManager instance;
     return instance;
 }
 
-// bool DataManager::connect() {
-//     std::cout << "[DataManager] connect called." << std::endl;
-
-//     conn = mysql_init(nullptr);
-//     if (!conn) return false;
-    
-//     if (!mysql_real_connect(conn, DB_HOST.c_str(), DB_USER.c_str(), 
-//                           DB_PASS.c_str(), DB_NAME.c_str(), 
-//                           DB_PORT, nullptr, 0)) {
-//         std::cerr << "MySQL Connection Error: " << mysql_error(conn) << std::endl;
-//         conn = nullptr;
-//         return false;
-//     }
-    
-//     return true;
-// }
 //设置强制字符集
 bool DataManager::connect() {
-    std::cout << "[DataManager] connect called." << std::endl;
 
     conn = mysql_init(nullptr);
     if (!conn) return false;
