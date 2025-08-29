@@ -17,7 +17,7 @@ MainWindow::MainWindow(QWidget *parent)
     tabWidget->addTab(modelManagerView, "模型管理");
     tabWidget->addTab(detectionPerformanceView, "探测效能计算");
     tabWidget->addTab(realtimeSimulationView, "实时仿真评估");
-    tabWidget->addTab(postMissionEvaluationView, "任务后仿真评估");
+    tabWidget->addTab(postMissionEvaluationView, "基于真实数据仿真评估");
 
     setCentralWidget(tabWidget);
     setWindowTitle("协同抗干扰仿真分析系统");

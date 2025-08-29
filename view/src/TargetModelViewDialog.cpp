@@ -12,7 +12,7 @@
 TargetModelViewDialog::TargetModelViewDialog(const TargetModelWithRcs& model, QWidget *parent)
     : QDialog(parent), targetModel(model) {
     initUI();
-    setWindowTitle("查看目标模型");
+    setWindowTitle("目标模型");
     setMinimumSize(500, 400);
 }
 

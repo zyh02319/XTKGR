@@ -9,14 +9,15 @@ JammerModelViewDialog::JammerModelViewDialog(const JammerModel& model, QWidget *
 }
 
 void JammerModelViewDialog::setupUI(const JammerModel& model) {
+    setWindowTitle("干扰模型");
     QVBoxLayout *layout = new QVBoxLayout(this);
     QFormLayout *formLayout = new QFormLayout;
 
     formLayout->addRow("名称:", new QLabel(QString::fromStdString(model.name)));
     formLayout->addRow("干扰类型:", new QLabel(QString::fromStdString(model.jamming_type)));
-    formLayout->addRow("功率:", new QLabel(QString("%1 W").arg(model.power)));
-    formLayout->addRow("带宽:", new QLabel(QString("%1 MHz").arg(model.bandwidth)));
-    formLayout->addRow("增益:", new QLabel(QString("%1 dB").arg(model.gain)));
+    formLayout->addRow("干扰功率:", new QLabel(QString("%1 W").arg(model.power)));
+    formLayout->addRow("干扰带宽:", new QLabel(QString("%1 MHz").arg(model.bandwidth)));
+    formLayout->addRow("干扰增益:", new QLabel(QString("%1 dB").arg(model.gain)));
     formLayout->addRow("经度:", new QLabel(QString::number(model.longitude, 'f', 6)));
     formLayout->addRow("纬度:", new QLabel(QString::number(model.latitude, 'f', 6)));
     formLayout->addRow("高度:", new QLabel(QString("%1 m").arg(model.altitude)));

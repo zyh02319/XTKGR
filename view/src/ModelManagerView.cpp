@@ -31,7 +31,7 @@ ModelManagerView::ModelManagerView(QWidget *parent)
     searchLayout->addWidget(new QLabel("搜索模型:"));
     
     searchEdit = new QLineEdit(this);
-    searchEdit->setPlaceholderText("输入模型名称...");
+    searchEdit->setPlaceholderText("请输入模型名称");
     searchEdit->setClearButtonEnabled(true);
     searchLayout->addWidget(searchEdit, 1);  // 设置拉伸因子为1
     
@@ -43,7 +43,7 @@ ModelManagerView::ModelManagerView(QWidget *parent)
     // === 模型类型选择 ===
     QHBoxLayout *typeLayout = new QHBoxLayout;
     modelTypeGroup = new QButtonGroup(this);
-    interferenceRadio = new QRadioButton("干扰机模型", this);
+    interferenceRadio = new QRadioButton("干扰模型", this);
     detectionRadio = new QRadioButton("探测模型", this);
     targetRadio = new QRadioButton("目标模型", this);
     

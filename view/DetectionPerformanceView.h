@@ -67,7 +67,12 @@ private:
 	QLabel *jammerLabel;
 	QLabel *targetLabel;
 	QLabel *rcsLabel;
-	QLabel *resultLabel;
+	QLabel *distanceValueLabel;  
+	QLabel *trackValueLabel;     
+	QLabel *reasonValueLabel;  
+	QLabel *distanceValue;  
+	QLabel *trackValue;     
+	QLabel *reasonValue;    
 	
 	// 编队评估控件
 	// QComboBox *formationAlgorithmComboBox;
@@ -81,7 +86,12 @@ private:
 	QLabel *formationJammerLabel;
 	QLabel *formationTargetLabel;
 	QLabel *formationRcsLabel;
-	QLabel *formationResultLabel;
+	QLabel *formationDistanceValueLabel;
+	QLabel *formationTrackValueLabel;
+	QLabel *formationReasonValueLabel;
+	QLabel *formationDistanceValue;
+	QLabel *formationTrackValue;
+	QLabel *formationReasonValue;
 	
 	// 当前选中的模型 - 使用指针替代optional
 	RadarModel* currentRadar = nullptr;
