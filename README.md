@@ -26,7 +26,7 @@
 - g++
 
 ## 如果没有环境需要运行以下代码
-安装 QtCharts 开发包
+安装 QtCharts 开发包:666
 在 Ubuntu / Debian 下直接执行：
 ```bash
 sudo apt-get update
