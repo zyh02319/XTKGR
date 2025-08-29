@@ -25,6 +25,20 @@
 - CMake
 - g++
 
+## 如果没有环境需要运行以下代码
+安装 QtCharts 开发包
+在 Ubuntu / Debian 下直接执行：
+```bash
+sudo apt-get update
+sudo apt-get install libqt5charts5-dev
+```
+安装完成后会在 /usr/lib/x86_64-linux-gnu/cmake/Qt5Charts/Qt5ChartsConfig.cmake 生成配置文件，CMake 就能找到。
+
+执行：
+```bash
+ls /usr/lib/x86_64-linux-gnu/cmake/Qt5Charts
+```
+如果里面有 Qt5ChartsConfig.cmake，那说明安装好了。
 ## 编译与运行
 ```bash
 sudo apt update
