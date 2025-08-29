@@ -8,8 +8,8 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
 pkg_check_modules(MYSQL REQUIRED mysqlclient)
-find_package(Qt5 COMPONENTS Widgets REQUIRED)
-
+#find_package(Qt5 COMPONENTS Widgets REQUIRED)
+find_package(Qt5 COMPONENTS Widgets Charts REQUIRED)
 include_directories(
     ${GTK3_INCLUDE_DIRS}
     ${MYSQL_INCLUDE_DIRS}
@@ -84,4 +84,5 @@ add_executable(KGR
 )
 
 
-target_link_libraries(KGR Qt5::Widgets ${GTK3_LIBRARIES} ${MYSQL_LIBRARIES})
+#target_link_libraries(KGR Qt5::Widgets ${GTK3_LIBRARIES} ${MYSQL_LIBRARIES})
+target_link_libraries(KGR Qt5::Widgets Qt5::Charts ${GTK3_LIBRARIES} ${MYSQL_LIBRARIES})
