@@ -39,6 +39,7 @@ private slots:
 	void onFormationConditionChanged(int index);
 	void onSelectFormationRadar();
 	void onAddFormationRadar();
+	void onDeleteFormationRadar();
 	void onSelectFormationJammer();
 	void onSelectFormationTarget();
 	void onFormationEvaluate();
@@ -79,6 +80,7 @@ private:
 	QComboBox *formationConditionComboBox;
 	QPushButton *selectFormationRadarButton;
 	QPushButton *addFormationRadarButton;
+	QPushButton *deleteFormationRadarButton;
 	QPushButton *selectFormationJammerButton;
 	QPushButton *selectFormationTargetButton;
 	QPushButton *formationEvaluateButton;
@@ -110,6 +112,8 @@ private:
 	ModelSelectionDialog *jammerDialog;
 	ModelSelectionDialog *targetDialog;
 	ModelSelectionDialog *radarDialogForFormationRadar = nullptr; // 雷达模型专用对话框
+	ModelSelectionDialog *jammerDialogForFormation = nullptr; // 编队干扰模型专用对话框
+	ModelSelectionDialog *targetDialogForFormationTarget = nullptr; // 编队目标模型专用对话框
 
 	// 状态标志：用于区分选择/增加雷达
 	bool isAddingFormationRadar = false;

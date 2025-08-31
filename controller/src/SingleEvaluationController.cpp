@@ -30,6 +30,15 @@ std::vector<TargetModel> SingleEvaluationController::getAllTargetModels() {
 std::vector<RcsData> SingleEvaluationController::getRcsDataByTargetId(int targetId) {
     return RcsDataDAO::findByTargetId(targetId);
 }
+
+double SingleEvaluationController::calculateDistance(int condition, 
+                                                   const RadarModel& radar, 
+                                                   const JammerModel& jammer, 
+                                                   const RcsData& rcs) {
+    // 对于没有距离参数的版本，使用默认距离0
+    return calculateDistance(condition, radar, jammer, rcs, 0.0);
+}
+
 double SingleEvaluationController::calculateDistance(int condition, 
                                                    const RadarModel& radar, 
                                                    const JammerModel& jammer, 
