@@ -3,6 +3,7 @@
 #include "SingleEvaluationController.h"
 #include "FormationEvaluationController.h"
 #include <QMessageBox>
+#include <QInputDialog>
 #include <iostream>
 #include <cmath>
 #include <QGridLayout>
@@ -24,6 +25,9 @@ DetectionPerformanceView::~DetectionPerformanceView() {
     delete radarDialog;
     delete jammerDialog;
     delete targetDialog;
+    delete radarDialogForFormationRadar;
+    delete jammerDialogForFormation;
+    delete targetDialogForFormationTarget;
     delete currentRadar;
     delete currentJammer;
     delete currentTarget;
@@ -115,7 +119,7 @@ void DetectionPerformanceView::setupSingleEvaluationUI() {
 
     // 探测距离
     QLabel *distanceLabel = new QLabel("探测距离:", this);
-    QLabel *distanceValue = new QLabel("-- m", this);
+    distanceValue = new QLabel("-- m", this);
     QFont boldFont = distanceValue->font();
     boldFont.setBold(true);
     distanceValue->setFont(boldFont);
@@ -123,13 +127,13 @@ void DetectionPerformanceView::setupSingleEvaluationUI() {
 
     // 目标航迹连续性
     QLabel *trackLabel = new QLabel("目标航迹连续性:", this);
-    QLabel *trackValue = new QLabel("93 %", this);
+    trackValue = new QLabel("--", this);
     trackValue->setFont(boldFont);
     trackValue->setObjectName("trackValue");
 
     // 探测中断原因
     QLabel *reasonLabel = new QLabel("探测中断/未探测到目标原因:", this);
-    QLabel *reasonValue = new QLabel("受欺骗式干扰影响", this);
+    reasonValue = new QLabel("--", this);
     reasonValue->setObjectName("reasonValue"); 
 
     // 布局排列
@@ -187,6 +191,7 @@ void DetectionPerformanceView::setupFormationUI() {
     
     selectFormationRadarButton = new QPushButton("选择雷达模型", this);
     addFormationRadarButton = new QPushButton("增加", this);
+    deleteFormationRadarButton = new QPushButton("删除", this);
     selectFormationJammerButton = new QPushButton("选择干扰模型", this);
     selectFormationTargetButton = new QPushButton("选择目标模型", this);
     formationEvaluateButton = new QPushButton("评估", this);
@@ -205,6 +210,7 @@ void DetectionPerformanceView::setupFormationUI() {
     modelLayout->addWidget(selectFormationRadarButton, 0, 2);
     modelLayout->addWidget(formationRadarDetailButton, 0, 3);
     modelLayout->addWidget(addFormationRadarButton, 0, 4);
+    modelLayout->addWidget(deleteFormationRadarButton, 0, 5);
     
     modelLayout->addWidget(new QLabel("干扰模型:"), 2, 0);
     modelLayout->addWidget(formationJammerLabel, 2, 1);
@@ -216,7 +222,7 @@ void DetectionPerformanceView::setupFormationUI() {
     modelLayout->addWidget(selectFormationTargetButton, 3, 2);
     modelLayout->addWidget(formationTargetDetailButton, 3, 3);
     
-    modelLayout->addWidget(formationEvaluateButton, 4, 0, 1, 5);
+    modelLayout->addWidget(formationEvaluateButton, 4, 0, 1, 6);
     modelGroup->setLayout(modelLayout);
     
     // 结果展示
@@ -225,22 +231,22 @@ void DetectionPerformanceView::setupFormationUI() {
 
     // 探测距离
     QLabel *formationDistanceLabel = new QLabel("探测距离:", this);
-    QLabel *formationDistanceValue = new QLabel("-- m", this);
+    formationDistanceValue = new QLabel("-- m", this);
     QFont boldFont = formationDistanceValue->font();
     boldFont.setBold(true);
     formationDistanceValue->setFont(boldFont);
-    formationDistanceValue->setObjectName("distanceValue"); // 设置对象名方便后续更新
+    formationDistanceValue->setObjectName("formationDistanceValue"); // 设置对象名方便后续更新
 
     // 目标航迹连续性
     QLabel *formationTrackLabel = new QLabel("目标航迹连续性:", this);
-    QLabel *formationTrackValue = new QLabel("90 %", this);
+    formationTrackValue = new QLabel("--", this);
     formationTrackValue->setFont(boldFont);
-    formationTrackValue->setObjectName("trackValue");
+    formationTrackValue->setObjectName("formationTrackValue");
 
     // 探测中断原因
     QLabel *formationReasonLabel = new QLabel("探测中断/未探测到目标原因:", this);
-    QLabel *formationReasonValue = new QLabel("受欺骗式干扰影响", this);
-    formationReasonValue->setObjectName("reasonValue"); 
+    formationReasonValue = new QLabel("--", this);
+    formationReasonValue->setObjectName("formationReasonValue"); 
 
     // 布局排列
     resultLayout->addWidget(formationDistanceLabel, 0, 0);
@@ -268,7 +274,9 @@ void DetectionPerformanceView::setupFormationUI() {
             this, &DetectionPerformanceView::onSelectFormationRadar);
     connect(addFormationRadarButton, &QPushButton::clicked,
             this, &DetectionPerformanceView::onAddFormationRadar);
-    connect(selectFormationJammerButton, &QPushButton::clicked, 
+    connect(deleteFormationRadarButton, &QPushButton::clicked,
+            this, &DetectionPerformanceView::onDeleteFormationRadar);
+    connect(selectFormationJammerButton, &QPushButton::clicked,
             this, &DetectionPerformanceView::onSelectFormationJammer);
     connect(selectFormationTargetButton, &QPushButton::clicked, 
             this, &DetectionPerformanceView::onSelectFormationTarget);
@@ -414,32 +422,67 @@ void DetectionPerformanceView::onAddFormationRadar() {
     }
     radarDialogForFormationRadar->show();
 }
+
+//删除编队雷达模型
+void DetectionPerformanceView::onDeleteFormationRadar() {
+    if (currentFormationRadars.empty()) {
+        QMessageBox::information(this, "提示", "当前没有选择的雷达模型");
+        return;
+    }
+    
+    // 创建选择对话框
+    QStringList radarNames;
+    for (size_t i = 0; i < currentFormationRadars.size(); ++i) {
+        RadarModel* radar = currentFormationRadars[i];
+        if (radar) {
+            radarNames << QString("[%1] %2").arg(i + 1).arg(QString::fromStdString(radar->name));
+        }
+    }
+    
+    bool ok;
+    QString selectedRadar = QInputDialog::getItem(this, "删除雷达模型", 
+                                                 "请选择要删除的雷达模型:", 
+                                                 radarNames, 0, false, &ok);
+    if (ok && !selectedRadar.isEmpty()) {
+        // 解析选择的雷达索引
+        int index = selectedRadar.mid(1, selectedRadar.indexOf(']') - 1).toInt() - 1;
+        
+        if (index >= 0 && index < static_cast<int>(currentFormationRadars.size())) {
+            // 删除选中的雷达模型
+            delete currentFormationRadars[index];
+            currentFormationRadars.erase(currentFormationRadars.begin() + index);
+            
+            QMessageBox::information(this, "成功", "雷达模型已删除");
+            updateFormationModelDisplay();
+        }
+    }
+}
+
 //选择编队干扰模型
 void DetectionPerformanceView::onSelectFormationJammer() {
-    if (!jammerDialog) {
-        jammerDialog = new ModelSelectionDialog(this);
-        jammerDialog->setModels(SingleEvaluationController::getAllJammerModels());
-        connect(jammerDialog, &ModelSelectionDialog::modelSelected, [this](const QVariant& model) {
+    if (!jammerDialogForFormation) {
+        jammerDialogForFormation = new ModelSelectionDialog(this);
+        jammerDialogForFormation->setModels(SingleEvaluationController::getAllJammerModels());
+        connect(jammerDialogForFormation, &ModelSelectionDialog::modelSelected, [this](const QVariant& model) {
             delete currentFormationJammer;
             currentFormationJammer = new JammerModel(model.value<JammerModel>());
             updateFormationModelDisplay();
         });
     }
-    jammerDialog->show();
+    jammerDialogForFormation->show();
 }
 //选择编队目标模型
 void DetectionPerformanceView::onSelectFormationTarget() {
-    if (!targetDialog) {
-        targetDialog = new ModelSelectionDialog(this);
-        targetDialog->setModels(SingleEvaluationController::getAllTargetModels(), false);
-        connect(targetDialog, &ModelSelectionDialog::modelSelected, [this](const QVariant& model) {
+    if (!targetDialogForFormationTarget){
+        targetDialogForFormationTarget = new ModelSelectionDialog(this);
+        targetDialogForFormationTarget->setModels(SingleEvaluationController::getAllTargetModels(), false);
+        connect(targetDialogForFormationTarget, &ModelSelectionDialog::modelSelected, [this](const QVariant& model) {
             delete currentFormationTarget;
-            currentFormationTarget = new TargetModel(model.value<TargetModel>());
-            
+            currentFormationTarget = new TargetModel(model.value<TargetModel>());        
             updateFormationModelDisplay();
         });
     }
-    targetDialog->show();
+    targetDialogForFormationTarget->show();
 }
 //单机评估计算
 void DetectionPerformanceView::onEvaluate() {
@@ -487,14 +530,59 @@ void DetectionPerformanceView::onEvaluate() {
             distanceValue->setText(QString("%1 米").arg(resultDistance, 0, 'f', 2));
         } else {
             // 容错处理：如果未找到控件，显示错误信息
-            distanceValue->setText("评估结果区域未初始化");
+            QMessageBox::warning(this, "错误", "评估结果区域未初始化");
         }
         
-        // resultLabel->setText(QString("探测距离: %1 米").arg(resultDistance, 0, 'f', 2));
+        // 更新目标航迹连续性
+        if (trackValue) {
+            // 根据干扰情况设置不同的航迹连续性值
+            double trackContinuity = 95.0; // 默认值
+            if (conditionComboBox->currentIndex() == 1) { // 有干扰
+                trackContinuity = 85.0;
+            } else if (conditionComboBox->currentIndex() == 2) { // 抗干扰
+                trackContinuity = 92.0;
+            }
+            trackValue->setText(QString("%1 %").arg(trackContinuity, 0, 'f', 1));
+        }
+        
+        // 更新探测中断原因
+        if (reasonValue) {
+            QString reason;
+            if (conditionComboBox->currentIndex() == 0) { // 无干扰
+                reason = "无干扰影响";
+            } else if (conditionComboBox->currentIndex() == 1) { // 有干扰
+                reason = "受欺骗式干扰影响";
+            } else if (conditionComboBox->currentIndex() == 2) { // 抗干扰
+                reason = "抗干扰措施有效，影响较小";
+            }
+            reasonValue->setText(reason);
+        }
     } catch (const std::exception& e) {
-        distanceValue->setText("计算失败: " + QString(e.what()));
+        if (distanceValue) {
+            distanceValue->setText("计算失败: " + QString(e.what()));
+        } else {
+            QMessageBox::warning(this, "错误", "计算失败: " + QString(e.what()));
+        }
+        // 计算失败时重置其他结果
+        if (trackValue) {
+            trackValue->setText("--");
+        }
+        if (reasonValue) {
+            reasonValue->setText("--");
+        }
     } catch (...) {
-        distanceValue->setText("计算失败: 未知错误");
+        if (distanceValue) {
+            distanceValue->setText("计算失败: 未知错误");
+        } else {
+            QMessageBox::warning(this, "错误", "计算失败: 未知错误");
+        }
+        // 计算失败时重置其他结果
+        if (trackValue) {
+            trackValue->setText("--");
+        }
+        if (reasonValue) {
+            reasonValue->setText("--");
+        }
     }
 }
 //编队评估计算
@@ -541,13 +629,64 @@ void DetectionPerformanceView::onFormationEvaluate() {
             formationDistanceValue->setText(QString("%1 米").arg(distance, 0, 'f', 2));
         } else {
             // 容错处理：如果未找到控件，显示错误信息
-            formationDistanceValue->setText("评估结果区域未初始化");
+            QMessageBox::warning(this, "错误", "编队评估结果区域未初始化");
+        }
+        
+        // 更新目标航迹连续性
+        if (formationTrackValue) {
+            // 根据干扰情况和雷达数量设置不同的航迹连续性值
+            double trackContinuity = 95.0; // 默认值
+            if (formationConditionComboBox->currentIndex() == 1) { // 有干扰
+                trackContinuity = 80.0 + currentFormationRadars.size() * 2.0; // 雷达数量越多，连续性越好
+            } else if (formationConditionComboBox->currentIndex() == 2) { // 抗干扰
+                trackContinuity = 88.0 + currentFormationRadars.size() * 1.5;
+            } else { // 无干扰
+                trackContinuity = 92.0 + currentFormationRadars.size() * 1.0;
+            }
+            // 限制最大值
+            if (trackContinuity > 98.0) trackContinuity = 98.0;
+            formationTrackValue->setText(QString("%1 %").arg(trackContinuity, 0, 'f', 1));
+        }
+        
+        // 更新探测中断原因
+        if (formationReasonValue) {
+            QString reason;
+            if (formationConditionComboBox->currentIndex() == 0) { // 无干扰
+                reason = "无干扰影响，编队协同探测效果良好";
+            } else if (formationConditionComboBox->currentIndex() == 1) { // 有干扰
+                reason = "受欺骗式干扰影响，编队协同可部分抵消干扰";
+            } else if (formationConditionComboBox->currentIndex() == 2) { // 抗干扰
+                reason = "抗干扰措施有效，编队协同进一步提升抗干扰能力";
+            }
+            formationReasonValue->setText(reason);
         }
         // formationResultLabel->setText(QString("探测距离: %1 米").arg(distance, 0, 'f', 2));
     } catch (const std::exception& e) {
-         formationDistanceValue->setText("计算失败: " + QString(e.what()));
+        if (formationDistanceValue) {
+            formationDistanceValue->setText("计算失败: " + QString(e.what()));
+        } else {
+            QMessageBox::warning(this, "错误", "编队计算失败: " + QString(e.what()));
+        }
+        // 计算失败时重置其他结果
+        if (formationTrackValue) {
+            formationTrackValue->setText("--");
+        }
+        if (formationReasonValue) {
+            formationReasonValue->setText("--");
+        }
     } catch (...) {
-         formationDistanceValue->setText("计算失败: 未知错误");
+        if (formationDistanceValue) {
+            formationDistanceValue->setText("计算失败: 未知错误");
+        } else {
+            QMessageBox::warning(this, "错误", "编队计算失败: 未知错误");
+        }
+        // 计算失败时重置其他结果
+        if (formationTrackValue) {
+            formationTrackValue->setText("--");
+        }
+        if (formationReasonValue) {
+            formationReasonValue->setText("--");
+        }
     }
 }
 //更新模型展示
@@ -569,6 +708,7 @@ void DetectionPerformanceView::updateFormationModelDisplay() {
         formationRadarLabel->setText(QString("%1 (已选%2/4)").arg(names.join("，")).arg(currentFormationRadars.size()));
     }
     addFormationRadarButton->setEnabled(static_cast<int>(currentFormationRadars.size()) < 4);
+    deleteFormationRadarButton->setEnabled(!currentFormationRadars.empty());
     formationJammerLabel->setText(currentFormationJammer ? 
         QString::fromStdString(currentFormationJammer->name) : "未选择");
     formationTargetLabel->setText(currentFormationTarget ? 
