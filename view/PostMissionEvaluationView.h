@@ -38,5 +38,5 @@ private:
 
     // 弹出选择数据的对话框
     QDialog *importDialog;
-    QList<QListWidget*> categoryLists; // 三类（干扰机、目标机、雷达模型）
+    QList<QListWidget*> categoryLists; // 三类（干扰机、目标机、探测模型）
 };

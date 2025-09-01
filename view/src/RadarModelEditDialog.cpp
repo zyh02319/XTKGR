@@ -39,7 +39,7 @@ void RadarModelEditDialog::setupUI() {
 
     powerSpin = new QDoubleSpinBox(this);
     powerSpin->setRange(0, 10000);
-    powerSpin->setSuffix(" W");
+    powerSpin->setSuffix(" KW");
     formLayout->addRow("功率:", powerSpin);
 
     bandwidthSpin = new QDoubleSpinBox(this);

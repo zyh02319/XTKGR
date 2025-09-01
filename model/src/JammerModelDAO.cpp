@@ -50,7 +50,6 @@ bool JammerModelDAO::insert(const JammerModel& model) {
 }
 //获取名字与ID
 std::vector<std::pair<int, std::string>> JammerModelDAO::getAllJammerNamesAndIds() {
-    std::cout << "[JammerModelDAO] getAllJammerModels called." << std::endl;
     std::vector<std::pair<int, std::string>> result;
     std::string query = "SELECT id, name FROM jammer_model";
     

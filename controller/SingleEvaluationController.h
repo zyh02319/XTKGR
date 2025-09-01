@@ -11,7 +11,7 @@
 
 class SingleEvaluationController {
 public:
-    // 获取所有雷达模型
+    // 获取所有探测模型
     static std::vector<RadarModel> getAllRadarModels();
     
     // 获取所有干扰机模型
