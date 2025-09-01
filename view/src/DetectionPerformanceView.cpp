@@ -81,7 +81,7 @@ void DetectionPerformanceView::setupSingleEvaluationUI() {
     QGroupBox *modelGroup = new QGroupBox("模型选择", this);
     QGridLayout *modelLayout = new QGridLayout;
     
-    selectRadarButton = new QPushButton("选择探测模型", this);
+    selectRadarButton = new QPushButton("选择雷达模型", this);
     selectJammerButton = new QPushButton("选择干扰模型", this);
     selectTargetButton = new QPushButton("选择目标模型", this);
     evaluateButton = new QPushButton("评估", this);
@@ -95,7 +95,7 @@ void DetectionPerformanceView::setupSingleEvaluationUI() {
     QPushButton *jammerDetailButton = new QPushButton("查看", this);
     QPushButton *targetDetailButton = new QPushButton("查看", this);
     
-    modelLayout->addWidget(new QLabel("探测模型:"), 0, 0);
+    modelLayout->addWidget(new QLabel("雷达模型:"), 0, 0);
     modelLayout->addWidget(radarLabel, 0, 1);
     modelLayout->addWidget(selectRadarButton, 0, 2);
     modelLayout->addWidget(radarDetailButton, 0, 3);
@@ -189,7 +189,7 @@ void DetectionPerformanceView::setupFormationUI() {
     QGroupBox *modelGroup = new QGroupBox("模型选择", this);
     QGridLayout *modelLayout = new QGridLayout;
     
-    selectFormationRadarButton = new QPushButton("选择探测模型", this);
+    selectFormationRadarButton = new QPushButton("选择雷达模型", this);
     addFormationRadarButton = new QPushButton("增加", this);
     deleteFormationRadarButton = new QPushButton("删除", this);
     selectFormationJammerButton = new QPushButton("选择干扰模型", this);
@@ -205,7 +205,7 @@ void DetectionPerformanceView::setupFormationUI() {
     QPushButton *formationJammerDetailButton = new QPushButton("查看", this);
     QPushButton *formationTargetDetailButton = new QPushButton("查看", this);
     
-    modelLayout->addWidget(new QLabel("探测模型:"), 0, 0);
+    modelLayout->addWidget(new QLabel("雷达模型:"), 0, 0);
     modelLayout->addWidget(formationRadarLabel, 0, 1);
     modelLayout->addWidget(selectFormationRadarButton, 0, 2);
     modelLayout->addWidget(formationRadarDetailButton, 0, 3);
@@ -320,7 +320,7 @@ void DetectionPerformanceView::onFormationConditionChanged(int index) {
     
     updateFormationModelDisplay();
 }
-//选择单机探测模型
+//选择单机雷达模型
 void DetectionPerformanceView::onSelectRadar() {
     if (!radarDialog) {
         radarDialog = new ModelSelectionDialog(this);
@@ -361,7 +361,7 @@ void DetectionPerformanceView::onSelectTarget() {
     }
     targetDialog->show();
 }
-//选择编队探测模型
+//选择编队雷达模型
 void DetectionPerformanceView::onSelectFormationRadar() {
     isAddingFormationRadar = false;
     if (!radarDialogForFormationRadar) {
@@ -371,7 +371,7 @@ void DetectionPerformanceView::onSelectFormationRadar() {
             RadarModel* newRadar = new RadarModel(model.value<RadarModel>());
             if (isAddingFormationRadar) {
                 if (static_cast<int>(currentFormationRadars.size()) >= 4) {
-                    QMessageBox::warning(this, "提示", "最多可选择四个探测模型");
+                    QMessageBox::warning(this, "提示", "最多可选择四个雷达模型");
                     delete newRadar;
                     return;
                 }
@@ -389,10 +389,10 @@ void DetectionPerformanceView::onSelectFormationRadar() {
     }
     radarDialogForFormationRadar->show();
 }
-//添加编队探测模型
+//添加编队雷达模型
 void DetectionPerformanceView::onAddFormationRadar() {
     if (static_cast<int>(currentFormationRadars.size()) >= 4) {
-        QMessageBox::warning(this, "提示", "最多可选择四个探测模型");
+        QMessageBox::warning(this, "提示", "最多可选择四个雷达模型");
         return;
     }
     isAddingFormationRadar = true;
@@ -404,7 +404,7 @@ void DetectionPerformanceView::onAddFormationRadar() {
             RadarModel* newRadar = new RadarModel(model.value<RadarModel>());
             if (isAddingFormationRadar) {
                 if (static_cast<int>(currentFormationRadars.size()) >= 4) {
-                    QMessageBox::warning(this, "提示", "最多可选择四个探测模型");
+                    QMessageBox::warning(this, "提示", "最多可选择四个雷达模型");
                     delete newRadar;
                     return;
                 }
@@ -423,10 +423,10 @@ void DetectionPerformanceView::onAddFormationRadar() {
     radarDialogForFormationRadar->show();
 }
 
-//删除编队探测模型
+//删除编队雷达模型
 void DetectionPerformanceView::onDeleteFormationRadar() {
     if (currentFormationRadars.empty()) {
-        QMessageBox::information(this, "提示", "当前没有选择的探测模型");
+        QMessageBox::information(this, "提示", "当前没有选择的雷达模型");
         return;
     }
     
@@ -440,19 +440,19 @@ void DetectionPerformanceView::onDeleteFormationRadar() {
     }
     
     bool ok;
-    QString selectedRadar = QInputDialog::getItem(this, "删除探测模型", 
-                                                 "请选择要删除的探测模型:", 
+    QString selectedRadar = QInputDialog::getItem(this, "删除雷达模型", 
+                                                 "请选择要删除的雷达模型:", 
                                                  radarNames, 0, false, &ok);
     if (ok && !selectedRadar.isEmpty()) {
-        // 解析选择的探测索引
+        // 解析选择的雷达索引
         int index = selectedRadar.mid(1, selectedRadar.indexOf(']') - 1).toInt() - 1;
         
         if (index >= 0 && index < static_cast<int>(currentFormationRadars.size())) {
-            // 删除选中的探测模型
+            // 删除选中的雷达模型
             delete currentFormationRadars[index];
             currentFormationRadars.erase(currentFormationRadars.begin() + index);
             
-            QMessageBox::information(this, "成功", "探测模型已删除");
+            QMessageBox::information(this, "成功", "雷达模型已删除");
             updateFormationModelDisplay();
         }
     }
@@ -488,7 +488,7 @@ void DetectionPerformanceView::onSelectFormationTarget() {
 void DetectionPerformanceView::onEvaluate() {
     // 验证输入
     if (!currentRadar) {
-        QMessageBox::warning(this, "错误", "请选择探测模型");
+        QMessageBox::warning(this, "错误", "请选择雷达模型");
         return;
     }
     if (conditionComboBox->currentIndex() != 0 && !currentJammer) {
@@ -500,11 +500,20 @@ void DetectionPerformanceView::onEvaluate() {
         return;
     }
     
-    // 计算探测与目标的空间距离
-    double distance = calculateSpatialDistance(
+    // 计算雷达与目标的距离
+    double targetDistance = calculateSpatialDistance(
         currentRadar->longitude, currentRadar->latitude, currentRadar->altitude,
         currentTarget->longitude, currentTarget->latitude, currentTarget->altitude
     );
+    
+    // 计算雷达与干扰机的距离（如果有干扰）
+    double jammerDistance = 0.0;
+    if (currentJammer) {
+        jammerDistance = calculateSpatialDistance(
+            currentRadar->longitude, currentRadar->latitude, currentRadar->altitude,
+            currentJammer->longitude, currentJammer->latitude, currentJammer->altitude
+        );
+    }
     
     // 计算探测距离
     try {
@@ -513,18 +522,18 @@ void DetectionPerformanceView::onEvaluate() {
             defaultJammer = JammerModel();
         }
         
-        // 调用单机评估控制器
-        // 固定RCS=50
+        // 调用单机评估控制器，传入雷达与干扰机的距离
         RcsData fixedRcs; fixedRcs.rcs_value = 50.0; fixedRcs.azimuth = 0; fixedRcs.elevation = 0;
         double resultDistance = SingleEvaluationController::calculateDistance(
             conditionComboBox->currentIndex(),
             *currentRadar,
             (conditionComboBox->currentIndex() == 0) ? defaultJammer : *currentJammer,
             fixedRcs,
-            distance
+            targetDistance,
+            jammerDistance  // 新增参数：雷达与干扰机的距离
         );
-
-        //更新探测距离
+        
+        // 更新探测距离
         if (distanceValue) {
             // 显示计算结果，保留2位小数
             distanceValue->setText(QString("%1 米").arg(resultDistance, 0, 'f', 2));
@@ -589,11 +598,11 @@ void DetectionPerformanceView::onEvaluate() {
 void DetectionPerformanceView::onFormationEvaluate() {
     // 验证输入
     if (static_cast<int>(currentFormationRadars.size()) < 2) {
-        QMessageBox::warning(this, "错误", "请至少选择两个探测模型");
+        QMessageBox::warning(this, "错误", "请至少选择两个雷达模型");
         return;
     }
     if (static_cast<int>(currentFormationRadars.size()) > 4) {
-        QMessageBox::warning(this, "错误", "最多选择四个探测模型");
+        QMessageBox::warning(this, "错误", "最多选择四个雷达模型");
         return;
     }
     
@@ -634,10 +643,10 @@ void DetectionPerformanceView::onFormationEvaluate() {
         
         // 更新目标航迹连续性
         if (formationTrackValue) {
-            // 根据干扰情况和探测数量设置不同的航迹连续性值
+            // 根据干扰情况和雷达数量设置不同的航迹连续性值
             double trackContinuity = 95.0; // 默认值
             if (formationConditionComboBox->currentIndex() == 1) { // 有干扰
-                trackContinuity = 80.0 + currentFormationRadars.size() * 2.0; // 探测数量越多，连续性越好
+                trackContinuity = 80.0 + currentFormationRadars.size() * 2.0; // 雷达数量越多，连续性越好
             } else if (formationConditionComboBox->currentIndex() == 2) { // 抗干扰
                 trackContinuity = 88.0 + currentFormationRadars.size() * 1.5;
             } else { // 无干扰
@@ -714,10 +723,10 @@ void DetectionPerformanceView::updateFormationModelDisplay() {
     formationTargetLabel->setText(currentFormationTarget ? 
         QString::fromStdString(currentFormationTarget->name) : "未选择");
 }
-//展示单机评估中探测模型详情
+//展示单机评估中雷达模型详情
 void DetectionPerformanceView::showRadarDetails() {
     if (currentRadar) {
-        QString details = QString("探测模型: %1\n"
+        QString details = QString("雷达模型: %1\n"
                                  "波长: %2 m\n"
                                  "发射功率: %3 KW\n"
                                  "信号带宽: %4 MHz\n"
@@ -737,7 +746,7 @@ void DetectionPerformanceView::showRadarDetails() {
                          .arg(currentRadar->altitude)
                          .arg(currentRadar->heading, 0, 'f', 2)
                          .arg(currentRadar->speed, 0, 'f', 2);
-        QMessageBox::information(this, "探测模型详情", details);
+        QMessageBox::information(this, "雷达模型详情", details);
     }
 }
 //展示单机评估中干扰模型详情
@@ -780,26 +789,26 @@ void DetectionPerformanceView::showTargetDetails() {
                          .arg(currentTarget->heading, 0, 'f', 2)
                          .arg(currentTarget->speed, 0, 'f', 2);
                          
-        // 如果探测模型已选择，显示距离
+        // 如果雷达模型已选择，显示距离
         if (currentRadar) {
             double distance = calculateSpatialDistance(
                 currentRadar->longitude, currentRadar->latitude, currentRadar->altitude,
                 currentTarget->longitude, currentTarget->latitude, currentTarget->altitude
             );
-            details += QString("\n与探测距离: %1 米").arg(distance, 0, 'f', 2);
+            details += QString("\n与雷达距离: %1 米").arg(distance, 0, 'f', 2);
         }
         
         QMessageBox::information(this, "目标模型详情", details);
     }
 }
-//展示编队评估中探测模型详情
+//展示编队评估中雷达模型详情
 void DetectionPerformanceView::showFormationRadarDetails() {
     if (!currentFormationRadars.empty()) {
         QString details;
         for (size_t i = 0; i < currentFormationRadars.size(); ++i) {
             RadarModel* r = currentFormationRadars[i];
             if (!r) continue;
-            details += QString("[%1] 探测模型: %2\n"
+            details += QString("[%1] 雷达模型: %2\n"
                                "波长: %3 m\n"
                                "发射功率: %4 KW\n"
                                "信号带宽: %5 MHz\n"
@@ -817,7 +826,7 @@ void DetectionPerformanceView::showFormationRadarDetails() {
                        .arg(r->latitude)
                        .arg(r->altitude);
         }
-        QMessageBox::information(this, "探测模型详情", details);
+        QMessageBox::information(this, "雷达模型详情", details);
     }
 }
 //展示编队评估中干扰模型详情

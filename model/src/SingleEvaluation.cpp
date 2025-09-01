@@ -1,6 +1,7 @@
 #include "SingleEvaluation.h"
 #include <cmath>
-//无干扰计算函数
+
+// 无干扰计算函数
 double SingleEvaluation::calculateDistanceWithoutJam(const RadarModel& radar, const RcsData& rcs) {
     // 公式: R_max^4 = (P_t * G_t^2 * λ^2 * σ) / [(4π)^3 * L * S_min]
     
@@ -19,12 +20,11 @@ double SingleEvaluation::calculateDistanceWithoutJam(const RadarModel& radar, co
     return pow(numerator / denominator, 0.25);
 }
 
-
 // 有干扰计算函数
 double SingleEvaluation::calculateDistanceWithJam(const RadarModel& radar, 
                                          const JammerModel& jammer, 
                                          const RcsData& rcs,
-                                         double distance) {
+                                         double jammerDistance) {  // 参数改为雷达与干扰机的距离
     // 单位转换: KW -> W
     double P_t = radar.power * 1000; 
     
@@ -38,8 +38,8 @@ double SingleEvaluation::calculateDistanceWithJam(const RadarModel& radar,
     // 干扰机单位频带功率 ρ_J = P_J / B_J (W/Hz)
     double rho_j = jammer.power / (jammer.bandwidth * 1e6); // MHz -> Hz
     
-    // 修改为四次方根计算
-    double numerator = P_t * ConstantValue::T0 * G_t * sigma * ConstantValue::g * (distance * distance);
+    // 使用雷达与干扰机的距离 R_j
+    double numerator = P_t * ConstantValue::T0 * G_t * sigma * ConstantValue::g * (jammerDistance * jammerDistance);
     double denominator = 4 * ConstantValue::PI * rho_j * G_j * ConstantValue::r_J * K_Jmin;
     
     // 四次方根计算
@@ -50,9 +50,9 @@ double SingleEvaluation::calculateDistanceWithJam(const RadarModel& radar,
 double SingleEvaluation::calculateDistanceWithAntiJam(const RadarModel& radar, 
                                              const JammerModel& jammer, 
                                              const RcsData& rcs, 
-                                             double distance) {
+                                             double jammerDistance) {  // 参数改为雷达与干扰机的距离
     // 先计算有干扰距离
-    double R_J0 = calculateDistanceWithJam(radar, jammer, rcs, distance);
+    double R_J0 = calculateDistanceWithJam(radar, jammer, rcs, jammerDistance);
     double F_I = ConstantValue::dBToLinear(ConstantValue::F_I_dB);
     
     // 保持四次方关系
