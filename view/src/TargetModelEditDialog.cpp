@@ -199,8 +199,7 @@ void TargetModelEditDialog::onSaveTarget() {
 }
 
 void TargetModelEditDialog::onCreateRcs() {
-    if (!isEditMode) return;
-    
+    if (!isEditMode) return;  
     RcsEditDialog dialog(targetId, this); // 添加 this 作为父窗口指针
     if (dialog.exec() == QDialog::Accepted) {
         loadRcsData(); // 刷新RCS数据

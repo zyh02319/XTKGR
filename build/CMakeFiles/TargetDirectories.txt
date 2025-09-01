@@ -1,0 +1,4 @@
+/home/zhang/Desktop/XTKGR/build/CMakeFiles/rebuild_cache.dir
+/home/zhang/Desktop/XTKGR/build/CMakeFiles/KGR.dir
+/home/zhang/Desktop/XTKGR/build/CMakeFiles/edit_cache.dir
+/home/zhang/Desktop/XTKGR/build/CMakeFiles/KGR_autogen.dir

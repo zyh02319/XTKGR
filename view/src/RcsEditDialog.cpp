@@ -6,12 +6,7 @@
 #include <QDoubleSpinBox>
 #include <QMessageBox>
 
-// RcsEditDialog::RcsEditDialog(int targetId, QWidget *parent)
-//     : QDialog(parent), targetId(targetId), originalAzimuth(0), originalElevation(0), isEditMode(false) {
-//     initUI();
-//     setWindowTitle("新建RCS数据");
-// }
-// 修复构造函数参数列表
+// 构造函数参数列表
 RcsEditDialog::RcsEditDialog(int targetId, QWidget *parent)
     : QDialog(parent), targetId(targetId), originalAzimuth(0), 
       originalElevation(0), isEditMode(false) {
@@ -19,14 +14,7 @@ RcsEditDialog::RcsEditDialog(int targetId, QWidget *parent)
     setWindowTitle("新建RCS数据");
 }
 
-// RcsEditDialog::RcsEditDialog(int targetId, double azimuth, double elevation, QWidget *parent)
-//     : QDialog(parent), targetId(targetId), originalAzimuth(azimuth), 
-//       originalElevation(elevation), isEditMode(true) {
-//     initUI();
-//     loadData();
-//     setWindowTitle("编辑RCS数据");
-// }
-// 修复构造函数参数列表
+// 构造函数参数列表
 RcsEditDialog::RcsEditDialog(int targetId, double azimuth, double elevation, QWidget *parent)
     : QDialog(parent), targetId(targetId), originalAzimuth(azimuth), 
       originalElevation(elevation), isEditMode(true) {
@@ -41,7 +29,7 @@ void RcsEditDialog::initUI() {
     QFormLayout *formLayout = new QFormLayout;
     
     azimuthSpin = new QDoubleSpinBox;
-    azimuthSpin->setRange(-180, 180);
+    azimuthSpin->setRange(0, 360);
     azimuthSpin->setSingleStep(1);
     
     elevationSpin = new QDoubleSpinBox;
@@ -49,8 +37,8 @@ void RcsEditDialog::initUI() {
     elevationSpin->setSingleStep(1);
     
     rcsSpin = new QDoubleSpinBox;
-    rcsSpin->setRange(-1000, 1000);
-    rcsSpin->setSingleStep(0.1);
+    rcsSpin->setRange(0, 100000);
+    rcsSpin->setSingleStep(0.0001);
     
     formLayout->addRow("方位角 (°):", azimuthSpin);
     formLayout->addRow("俯仰角 (°):", elevationSpin);
