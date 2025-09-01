@@ -42,9 +42,6 @@ void TargetModelEditDialog::initUI() {
     nameEdit = new QLineEdit;
     // typeEdit = new QLineEdit;
     typeCombo = new QComboBox; 
-    // longitudeEdit = new QLineEdit;
-    // latitudeEdit = new QLineEdit;
-    // altitudeEdit = new QLineEdit;
     longitudeSpin = new QDoubleSpinBox;
     longitudeSpin->setRange(-180, 180); // 经度范围
     longitudeSpin->setDecimals(6);      // 小数位数
@@ -79,10 +76,6 @@ void TargetModelEditDialog::initUI() {
     
     formLayout->addRow("名称:", nameEdit);
     formLayout->addRow("类型:", typeCombo); // 修改为 typeCombo
-    // formLayout->addRow("类型:", typeEdit);
-    // formLayout->addRow("经度:", longitudeEdit);
-    // formLayout->addRow("纬度:", latitudeEdit);
-    // formLayout->addRow("高度:", altitudeEdit);
     formLayout->addRow("经度:", longitudeSpin);
     formLayout->addRow("纬度:", latitudeSpin);
     formLayout->addRow("高度:", altitudeSpin);
@@ -145,9 +138,6 @@ void TargetModelEditDialog::loadTargetData() {
         if (index >= 0) {
             typeCombo->setCurrentIndex(index);
         }
-        // longitudeEdit->setText(QString::number(currentModel.longitude));
-        // latitudeEdit->setText(QString::number(currentModel.latitude));
-        // altitudeEdit->setText(QString::number(currentModel.altitude));
         longitudeSpin->setValue(currentModel.longitude);
         latitudeSpin->setValue(currentModel.latitude);
         altitudeSpin->setValue(currentModel.altitude);
@@ -205,41 +195,12 @@ void TargetModelEditDialog::onSaveTarget() {
     } else {
         QMessageBox::warning(this, "错误", isEditMode ? "更新目标模型失败" : "创建目标模型失败");
     }
-    // 防止重复保存
-    // static bool isSaving = false;
-    // if (isSaving) return;
-    // isSaving = true;
-    
-    // TargetModel model = getTargetModel();
-    
-    // bool success = false;
-    // if (isEditMode) {
-    //     success = ModelManageController::updateTargetModel(model);
-    // } else {
-    //     success = ModelManageController::createTargetModel(model);
-    //     if (success) {
-    //         targetId = model.id; // 保存新创建的ID
-    //         isEditMode = true; // 设置为编辑模式
-    //     }
-    // }
-    
-    // if (success) {
-    //     QMessageBox::information(this, "成功", isEditMode ? "目标模型更新成功" : "目标模型创建成功");
-    //     accept(); // 关闭对话框
-    // } else {
-    //     QMessageBox::warning(this, "错误", isEditMode ? "更新目标模型失败" : "创建目标模型失败");
-    // }
-    
-    // isSaving = false;
     
 }
 
 void TargetModelEditDialog::onCreateRcs() {
     if (!isEditMode) return;
     
-     // 错误修复：使用正确的参数调用构造函数
-    // 原错误代码：RcsEditDialog dialog(-1, targetId);
-    // 修正为：
     RcsEditDialog dialog(targetId, this); // 添加 this 作为父窗口指针
     if (dialog.exec() == QDialog::Accepted) {
         loadRcsData(); // 刷新RCS数据

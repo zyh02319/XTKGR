@@ -67,7 +67,7 @@ void PostMissionEvaluationView::onImportData()
 
     QVBoxLayout *dlgLayout = new QVBoxLayout(importDialog);
 
-    QStringList categories = {"干扰机", "目标机", "雷达模型"};
+    QStringList categories = {"干扰机", "目标机", "探测模型"};
     categoryLists.clear();
 
     for (const QString &cat : categories) {
@@ -110,7 +110,7 @@ void PostMissionEvaluationView::onConfirmImport()
             }
         }
     } else {
-        // 编队：干扰机和目标机 1 个，雷达模型至少 1 个
+        // 编队：干扰机和目标机 1 个，探测模型至少 1 个
         for (int c = 0; c < categoryLists.size(); c++) {
             QListWidget *list = categoryLists[c];
             int cnt = 0;
@@ -123,7 +123,7 @@ void PostMissionEvaluationView::onConfirmImport()
                 return;
             }
             if (c == 2 && cnt < 1) {
-                QMessageBox::warning(importDialog, "错误", "编队评估下雷达模型至少选一个");
+                QMessageBox::warning(importDialog, "错误", "编队评估下探测模型至少选一个");
                 return;
             }
         }

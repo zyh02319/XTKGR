@@ -8,8 +8,8 @@
 #include "ModelManageController.h"  // 包含控制器头文件
 #include "JammerModelEditDialog.h"  // 包含编辑对话框
 #include "JammerModelViewDialog.h"  // 包含查看对话框
-#include "RadarModelEditDialog.h" // 添加雷达模型编辑对话框
-#include "RadarModelViewDialog.h" // 添加雷达模型查看对话框
+#include "RadarModelEditDialog.h" // 添加探测模型编辑对话框
+#include "RadarModelViewDialog.h" // 添加探测模型查看对话框
 #include "TargetModelEditDialog.h"  // 目标模型编辑对话框
 #include "TargetModelViewDialog.h"  // 目标模型查看对话框
 
