@@ -15,7 +15,7 @@ void RadarModelViewDialog::setupUI(const RadarModel& model) {
 
     formLayout->addRow("名称:", new QLabel(QString::fromStdString(model.name)));
     formLayout->addRow("波长:", new QLabel(QString("%1 m").arg(model.wavelength)));
-    formLayout->addRow("功率:", new QLabel(QString("%1 W").arg(model.power)));
+    formLayout->addRow("功率:", new QLabel(QString("%1 KW").arg(model.power)));
     formLayout->addRow("带宽:", new QLabel(QString("%1 MHz").arg(model.bandwidth)));
     formLayout->addRow("增益:", new QLabel(QString("%1 dB").arg(model.gain)));
     // formLayout->addRow("损耗因子:", new QLabel(QString("%1 dB").arg(model.loss_factor)));
