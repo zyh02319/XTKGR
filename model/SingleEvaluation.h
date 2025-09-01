@@ -1,9 +1,9 @@
 #ifndef SINGLEEVALUATION_H
 #define SINGLEEVALUATION_H
 
-#include "RadarModelDAO.h"   // 包含RadarModel结构体
-#include "JammerModelDAO.h"  // 包含JammerModel结构体
-#include "RcsDataDAO.h"      // 包含RcsData结构体
+#include "RadarModelDAO.h"
+#include "JammerModelDAO.h"
+#include "RcsDataDAO.h"
 #include "ConstantValue.h"
 
 class SingleEvaluation {
@@ -12,10 +12,10 @@ public:
     static double calculateDistanceWithoutJam(const RadarModel& radar, const RcsData& rcs);
     
     // 有干扰条件下的探测距离 (m) 
-    static double calculateDistanceWithJam(const RadarModel& radar, const JammerModel& jammer, const RcsData& rcs, double distance);
+    static double calculateDistanceWithJam(const RadarModel& radar, const JammerModel& jammer, const RcsData& rcs, double jammerDistance);
     
     // 抗干扰条件下的探测距离 (m)
-    static double calculateDistanceWithAntiJam(const RadarModel& radar, const JammerModel& jammer, const RcsData& rcs, double distance);
+    static double calculateDistanceWithAntiJam(const RadarModel& radar, const JammerModel& jammer, const RcsData& rcs, double jammerDistance);
 };
 
 #endif // SINGLEEVALUATION_H

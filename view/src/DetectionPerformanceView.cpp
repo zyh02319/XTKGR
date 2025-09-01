@@ -500,11 +500,20 @@ void DetectionPerformanceView::onEvaluate() {
         return;
     }
     
-    // 计算雷达与目标的空间距离
-    double distance = calculateSpatialDistance(
+    // 计算雷达与目标的距离
+    double targetDistance = calculateSpatialDistance(
         currentRadar->longitude, currentRadar->latitude, currentRadar->altitude,
         currentTarget->longitude, currentTarget->latitude, currentTarget->altitude
     );
+    
+    // 计算雷达与干扰机的距离（如果有干扰）
+    double jammerDistance = 0.0;
+    if (currentJammer) {
+        jammerDistance = calculateSpatialDistance(
+            currentRadar->longitude, currentRadar->latitude, currentRadar->altitude,
+            currentJammer->longitude, currentJammer->latitude, currentJammer->altitude
+        );
+    }
     
     // 计算探测距离
     try {
@@ -513,18 +522,18 @@ void DetectionPerformanceView::onEvaluate() {
             defaultJammer = JammerModel();
         }
         
-        // 调用单机评估控制器
-        // 固定RCS=50
+        // 调用单机评估控制器，传入雷达与干扰机的距离
         RcsData fixedRcs; fixedRcs.rcs_value = 50.0; fixedRcs.azimuth = 0; fixedRcs.elevation = 0;
         double resultDistance = SingleEvaluationController::calculateDistance(
             conditionComboBox->currentIndex(),
             *currentRadar,
             (conditionComboBox->currentIndex() == 0) ? defaultJammer : *currentJammer,
             fixedRcs,
-            distance
+            targetDistance,
+            jammerDistance  // 新增参数：雷达与干扰机的距离
         );
-
-        //更新探测距离
+        
+        // 更新探测距离
         if (distanceValue) {
             // 显示计算结果，保留2位小数
             distanceValue->setText(QString("%1 米").arg(resultDistance, 0, 'f', 2));
