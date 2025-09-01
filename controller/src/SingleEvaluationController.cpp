@@ -31,26 +31,29 @@ std::vector<RcsData> SingleEvaluationController::getRcsDataByTargetId(int target
     return RcsDataDAO::findByTargetId(targetId);
 }
 
+// 保持向后兼容的版本
 double SingleEvaluationController::calculateDistance(int condition, 
                                                    const RadarModel& radar, 
                                                    const JammerModel& jammer, 
                                                    const RcsData& rcs) {
     // 对于没有距离参数的版本，使用默认距离0
-    return calculateDistance(condition, radar, jammer, rcs, 0.0);
+    return calculateDistance(condition, radar, jammer, rcs, 0.0, 0.0);
 }
 
+// 新版本，添加距离参数
 double SingleEvaluationController::calculateDistance(int condition, 
                                                    const RadarModel& radar, 
                                                    const JammerModel& jammer, 
                                                    const RcsData& rcs,
-                                                   double distance) {  // 添加距离参数
+                                                   double targetDistance,
+                                                   double jammerDistance) {
     switch (condition) {
     case 0: // 无干扰
         return SingleEvaluation::calculateDistanceWithoutJam(radar, rcs);
     case 1: // 有干扰
-        return SingleEvaluation::calculateDistanceWithJam(radar, jammer, rcs, distance);
+        return SingleEvaluation::calculateDistanceWithJam(radar, jammer, rcs, jammerDistance);
     case 2: // 抗干扰
-        return SingleEvaluation::calculateDistanceWithAntiJam(radar, jammer, rcs, distance);
+        return SingleEvaluation::calculateDistanceWithAntiJam(radar, jammer, rcs, jammerDistance);
     default:
         return 0.0;
     }
