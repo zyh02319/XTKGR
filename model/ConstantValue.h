@@ -18,7 +18,7 @@ public:
     static constexpr double F_I_dB = 10.0;
     
     // 信号持续时间 (s)
-    static constexpr double T0 = 1.0;
+    static constexpr double T0 = 1e-3;
     
     // 极化失配损失系数
     static constexpr double r_J = 1.0;

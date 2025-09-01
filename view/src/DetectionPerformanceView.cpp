@@ -522,8 +522,12 @@ void DetectionPerformanceView::onEvaluate() {
             defaultJammer = JammerModel();
         }
         
-        // 调用单机评估控制器，传入雷达与干扰机的距离
-        RcsData fixedRcs; fixedRcs.rcs_value = 50.0; fixedRcs.azimuth = 0; fixedRcs.elevation = 0;
+
+        // 调用单机评估控制器
+        // 固定RCS=50
+        RcsData fixedRcs; 
+        fixedRcs.rcs_value = 50.0; fixedRcs.azimuth = 0; fixedRcs.elevation = 0;
+
         double resultDistance = SingleEvaluationController::calculateDistance(
             conditionComboBox->currentIndex(),
             *currentRadar,

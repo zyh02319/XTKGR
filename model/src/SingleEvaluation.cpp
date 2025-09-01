@@ -1,4 +1,5 @@
 #include "SingleEvaluation.h"
+#include <iostream>
 #include <cmath>
 
 // 无干扰计算函数
@@ -18,6 +19,8 @@ double SingleEvaluation::calculateDistanceWithoutJam(const RadarModel& radar, co
     double denominator = pow(4 * ConstantValue::PI, 3) * ConstantValue::L * ConstantValue::S_min;
     
     return pow(numerator / denominator, 0.25);
+
+
 }
 
 // 有干扰计算函数
@@ -44,8 +47,9 @@ double SingleEvaluation::calculateDistanceWithJam(const RadarModel& radar,
     
     // 四次方根计算
     return pow(numerator / denominator, 0.25);
-}
 
+
+}
 // 抗干扰计算函数
 double SingleEvaluation::calculateDistanceWithAntiJam(const RadarModel& radar, 
                                              const JammerModel& jammer, 
@@ -54,7 +58,7 @@ double SingleEvaluation::calculateDistanceWithAntiJam(const RadarModel& radar,
     // 先计算有干扰距离
     double R_J0 = calculateDistanceWithJam(radar, jammer, rcs, jammerDistance);
     double F_I = ConstantValue::dBToLinear(ConstantValue::F_I_dB);
-    
+
     // 保持四次方关系
     return R_J0 * pow(F_I, 0.25);
 }
