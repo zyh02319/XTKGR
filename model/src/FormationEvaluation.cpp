@@ -1,6 +1,34 @@
 // FormationEvaluation.cpp
 #include "FormationEvaluation.h"
 
+// 引入空间距离计算辅助函数
+double FormationEvaluation::calculateSpatialDistance(
+    double lon1, double lat1, double alt1, 
+    double lon2, double lat2, double alt2){
+    // 地球半径（米）
+    const double R = 6371000.0;
+    
+    // 将经纬度转换为弧度
+    double lat1Rad = lat1 * ConstantValue::PI / 180.0;
+    double lon1Rad = lon1 * ConstantValue::PI / 180.0;
+    double lat2Rad = lat2 * ConstantValue::PI / 180.0;
+    double lon2Rad = lon2 * ConstantValue::PI / 180.0;
+    
+    // 计算差值
+    double dLat = lat2Rad - lat1Rad;
+    double dLon = lon2Rad - lon1Rad;
+    
+    // Haversine公式计算球面距离
+    double a = sin(dLat/2) * sin(dLat/2) +
+               cos(lat1Rad) * cos(lat2Rad) * sin(dLon/2) * sin(dLon/2);
+    double c = 2 * atan2(sqrt(a), sqrt(1-a));
+    double distance = R * c;
+    
+    // 考虑高度差（直角坐标）
+    double dAlt = alt2 - alt1;
+    return sqrt(distance * distance + dAlt * dAlt);
+}
+
 //无干扰条件下
 double FormationEvaluation::calculateDistanceWithoutJam(const std::vector<RadarModel>& radars,
                                                   const RcsData& rcs) {
@@ -43,97 +71,97 @@ double FormationEvaluation::calculateDistanceWithoutJam(const std::vector<RadarM
     return pow(numerator / denominator, 0.25);
 }
 
-//干扰条件下
+//有干扰条件下
 double FormationEvaluation::calculateDistanceWithJam(const std::vector<RadarModel>& radars,
                                                 const JammerModel& jammer,
+                                                const TargetModel& target,
                                                 const RcsData& rcs) {
-    // 多站雷达基线长度满足L≥λR/D时，目标回波互不相关，干扰信号强相关
-    // 选取主站（如第1部雷达）作为基准
-    const RadarModel& mainRadar = radars[0];
-    
-    // 单位转换：KW -> W
-    double P_t_main = mainRadar.power * 1000;
-    
-    // dB转线性值（文档公式（2.18）、（2.20）：天线增益影响回波幅度）
-    double G_t_main = ConstantValue::dBToLinear(mainRadar.gain);
-    double G_j = ConstantValue::dBToLinear(jammer.gain);
-    double K_Jmin = ConstantValue::dBToLinear(ConstantValue::K_Jmin_dB);
+    // 改进：使用空间距离进行计算，而不是固定增益
+    double totalTargetSignalPower = 0.0;
+    double totalJammerSignalPower = 0.0;
 
-    // 目标RCS
-    double sigma = rcs.rcs_value;
+    for (const auto& radar : radars) {
+        // 计算雷达到目标和雷达到干扰机的距离
+        double targetDistance = calculateSpatialDistance(radar.longitude, radar.latitude, radar.altitude,
+                                                         target.longitude, target.latitude, target.altitude);
+        double jammerDistance = calculateSpatialDistance(radar.longitude, radar.latitude, radar.altitude,
+                                                         jammer.longitude, jammer.latitude, jammer.altitude);
+        
+        // 单位转换
+        double P_t_linear = radar.power * 1000; // KW -> W
+        double G_t_linear = ConstantValue::dBToLinear(radar.gain);
+        double G_j_linear = ConstantValue::dBToLinear(jammer.gain);
+        double rho_j = jammer.power / (jammer.bandwidth * 1e6); // MHz -> Hz
 
-    // 多站目标信号叠加增益
-    double targetGain = 1.0; // 主站基础增益
-    for (size_t i = 1; i < radars.size(); ++i) {
-        double P_t_sub = radars[i].power * 1000;
-        double G_t_sub = ConstantValue::dBToLinear(radars[i].gain);
-        // 子站对目标信号的贡献（加权叠加，基于公式（2.18）的增益关系）
-        targetGain += (P_t_sub * G_t_sub) / (P_t_main * G_t_main) * ConstantValue::sub_weight; // 子站权重系数
+        // 计算目标信号在接收机处的功率（假设双程）
+        double targetPowerAtReceiver = (P_t_linear * G_t_linear * G_t_linear * ConstantValue::dBToLinear(rcs.rcs_value) * pow(ConstantValue::dBToLinear(radar.wavelength), 2))
+                                       / (pow(4 * ConstantValue::PI, 3) * pow(targetDistance, 4));
+        
+        // 计算干扰信号在接收机处的功率
+        double jammerPowerAtReceiver = (rho_j * G_j_linear * G_t_linear)
+                                       / (pow(4 * ConstantValue::PI, 2) * pow(jammerDistance, 2));
+
+        totalTargetSignalPower += targetPowerAtReceiver;
+        totalJammerSignalPower += jammerPowerAtReceiver;
     }
-   
-    // 多站干扰信号叠加增益
-    double jammerGain = radars.size();
+    
+    double K_Jmin = ConstantValue::dBToLinear(ConstantValue::K_Jmin_dB);
+    double numerator = totalTargetSignalPower;
+    double denominator = K_Jmin * totalJammerSignalPower;
 
-    // 干扰机单位频带功率
-    double rho_j = jammer.power / (jammer.bandwidth * 1e6); // MHz -> Hz
-
-    // 分子：noise_temperature为系统噪声温度,propagation_constant为传播常数
-    double numerator = P_t_main * G_t_main * sigma * ConstantValue::noise_temperature *ConstantValue::propagation_constant * targetGain;
-    // 分母：interference_path_loss为干扰路径损耗，K_Jmin为雷达最小可检测信干比
-    double denominator = 4 * ConstantValue::PI * rho_j * G_j * ConstantValue::interference_path_loss * K_Jmin * jammerGain;
-
-    // 四次方根计算
+    // 这里需要根据新的模型推导出距离公式
+    // 假设探测距离与S/J成正比，即 R_det ^ 4 正比于 S/J
+    // 简化为：R^4 = C * (totalTargetSignalPower / totalJammerSignalPower)
+    // 我们可以通过一个标定系数将这个比值转换为距离
+    // 简化处理：将公式简化为与单机有干扰公式类似的形式，但分子分母都为累加和
+    double numerator_new = (radars[0].power * 1000 * ConstantValue::dBToLinear(radars[0].gain) * rcs.rcs_value);
+    double denominator_new = (4 * ConstantValue::PI * (jammer.power / (jammer.bandwidth * 1e6)) * ConstantValue::dBToLinear(jammer.gain) * ConstantValue::dBToLinear(ConstantValue::K_Jmin_dB));
+    double R_J_new = pow( (numerator_new / denominator_new), 0.25);
+    
     return pow(numerator / denominator, 0.25);
 }
+
 //抗干扰条件下
 double FormationEvaluation::calculateDistanceWithAntiJam(const std::vector<RadarModel>& radars,
                                                 const JammerModel& jammer,
+                                                const TargetModel& target,
                                                 const RcsData& rcs) {
-    const RadarModel& mainRadar = radars[0];
-    
-    // 单位转换：KW -> W
-    double P_t_main = mainRadar.power * 1000;
-    
-    // dB转线性值（文档公式2.18、2.20）
-    double G_t_main = ConstantValue::dBToLinear(mainRadar.gain);
-    double G_j = ConstantValue::dBToLinear(jammer.gain);
-    double K_Jmin = ConstantValue::dBToLinear(ConstantValue::K_Jmin_dB);
+    // 改进：使用空间距离进行计算，并引入抗干扰改善因子
+    double totalTargetSignalPower = 0.0;
+    double totalJammerSignalPower = 0.0;
 
-    // 目标RCS
-    double sigma = rcs.rcs_value;
+    for (const auto& radar : radars) {
+        // 计算雷达到目标和雷达到干扰机的距离
+        double targetDistance = calculateSpatialDistance(radar.longitude, radar.latitude, radar.altitude,
+                                                         target.longitude, target.latitude, target.altitude);
+        double jammerDistance = calculateSpatialDistance(radar.longitude, radar.latitude, radar.altitude,
+                                                         jammer.longitude, jammer.latitude, jammer.altitude);
+        
+        // 单位转换
+        double P_t_linear = radar.power * 1000; // KW -> W
+        double G_t_linear = ConstantValue::dBToLinear(radar.gain);
+        double G_j_linear = ConstantValue::dBToLinear(jammer.gain);
+        double rho_j = jammer.power / (jammer.bandwidth * 1e6); // MHz -> Hz
 
-    // 多站目标信号叠加增益（文档2.3.1节）
-    double targetGain = 1.0;
-    for (size_t i = 1; i < radars.size(); ++i) {
-        double P_t_sub = radars[i].power * 1000;
-        double G_t_sub = ConstantValue::dBToLinear(radars[i].gain);
-        targetGain += (P_t_sub * G_t_sub) / (P_t_main * G_t_main) * ConstantValue::sub_weight;
+        // 计算目标信号在接收机处的功率（假设双程）
+        double targetPowerAtReceiver = (P_t_linear * G_t_linear * G_t_linear * ConstantValue::dBToLinear(rcs.rcs_value) * pow(ConstantValue::dBToLinear(radar.wavelength), 2))
+                                       / (pow(4 * ConstantValue::PI, 3) * pow(targetDistance, 4));
+        
+        // 计算干扰信号在接收机处的功率
+        double jammerPowerAtReceiver = (rho_j * G_j_linear * G_t_linear)
+                                       / (pow(4 * ConstantValue::PI, 2) * pow(jammerDistance, 2));
+
+        totalTargetSignalPower += targetPowerAtReceiver;
+        totalJammerSignalPower += jammerPowerAtReceiver;
     }
-   
-    // 抗干扰后干扰叠加增益（取原增益的10%，文档3.2节仿真）
-    double jammerGain_residual = radars.size() * ConstantValue::jammerGain_residual;
+    
+    // 引入抗干扰改善因子F_I
+    double F_I = ConstantValue::dBToLinear(ConstantValue::F_I); 
+    totalJammerSignalPower /= F_I;
 
-    // 干扰机单位频带功率
-    double rho_j = jammer.power / (jammer.bandwidth * 1e6);
+    double K_Jmin = ConstantValue::dBToLinear(ConstantValue::K_Jmin_dB);
+    double numerator = totalTargetSignalPower;
+    double denominator = K_Jmin * totalJammerSignalPower;
 
-    // 抗干扰改善因子
-    double F_I = pow(10.0, ConstantValue::F_I / 10.0); 
-
-    // 分子：引入抗干扰改善因子F_I
-    double numerator = P_t_main * G_t_main * sigma 
-                     * ConstantValue::noise_temperature 
-                     * ConstantValue::propagation_constant 
-                     * targetGain 
-                     * F_I;
-    // 分母：使用干扰残余增益
-    double denominator = 4 * ConstantValue::PI 
-                       * rho_j 
-                       * G_j 
-                       * ConstantValue::interference_path_loss 
-                       * K_Jmin 
-                       * jammerGain_residual;
-
-    // 四次方根计算
     return pow(numerator / denominator, 0.25);
 }
-

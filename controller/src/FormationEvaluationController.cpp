@@ -15,14 +15,14 @@ double FormationEvaluationController::evaluateFormation(
         return FormationEvaluation::calculateDistanceWithoutJam(radars, rcs);
     case 1: // 有干扰
         if (jammer != nullptr) {
-            return FormationEvaluation::calculateDistanceWithJam(radars, *jammer, rcs);
+            return FormationEvaluation::calculateDistanceWithJam(radars, *jammer, target, rcs);
         } else {
             // 如果没有干扰机，按无干扰处理
             return FormationEvaluation::calculateDistanceWithoutJam(radars, rcs);
         }
     case 2: // 抗干扰
         if (jammer != nullptr) {
-            return FormationEvaluation::calculateDistanceWithAntiJam(radars, *jammer, rcs);
+            return FormationEvaluation::calculateDistanceWithAntiJam(radars, *jammer, target, rcs);
         } else {
             // 如果没有干扰机，按无干扰处理
             return FormationEvaluation::calculateDistanceWithoutJam(radars, rcs);
