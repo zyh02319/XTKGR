@@ -1,0 +1,56 @@
+### 文件功能介绍
+
+**1. `README.md` 和 `CMakeLists.txt`**
+* `README.md`: 项目简介，概述了主要功能、目录结构、依赖项以及编译和运行的说明.
+* `CMakeLists.txt`: 项目的构建配置文件，定义了如何编译可执行文件 `KGR` 以及其所需的源文件、头文件和链接库（如 `Qt5`、`GTK+3` 和 `MySQL`）.
+
+**2. `database` 目录**
+* `jammer_model.sql`: 定义了干扰机模型的数据库表结构，包含 ID、名称、类型、功率、带宽、增益、位置（经纬度、高度）、航向和速度等字段.
+* `radar_model.sql`: 定义了雷达探测模型的数据库表结构，包含 ID、名称、波长、功率、带宽、增益、损耗因子、位置（经纬度、高度）、航向和速度等字段.
+* `rcs_table.sql`: 定义了目标机 RCS（雷达散射截面）数据的数据库表，通过 `target_model_id` 与目标模型关联.
+* `target_model.sql`: 定义了目标模型的数据库表，包含 ID、名称、类型、位置、航向和速度等字段.
+* `执行顺序.txt`: 提供了数据库脚本的执行顺序，确保表之间的外键依赖关系正确创建.
+
+**3. `data` 目录**
+* `DataManager.cpp/h`: 实现了数据库连接、查询、执行和断开的统一接口，并包含了对字符串进行转义以防止 SQL 注入的功能.
+* `DBConfig.h`: 存储了数据库连接的配置常量，如主机名、用户名、密码、数据库名和端口.
+
+**4. `model` 目录**
+* `*ModelDAO.cpp/h` 和 `RcsDataDAO.cpp/h`: 包含数据访问对象 (DAO)，负责与数据库进行直接交互，实现对干扰机、雷达、目标模型和 RCS 数据的增、删、改、查等操作.
+* `SingleEvaluation.cpp/h`: 实现了无干扰、有干扰和抗干扰三种场景下，单部雷达探测距离的计算逻辑.
+* `FormationEvaluation.cpp/h`: 实现了无干扰、有干扰和抗干扰三种场景下，多部雷达编队探测距离的计算逻辑.
+* `ConstantValue.h`: 包含了用于计算的物理常量和单位转换函数.
+* `TargetModelWithRcs.cpp/h`: 组合了目标模型及其相关的 RCS 数据，方便一次性获取完整信息.
+
+**5. `controller` 目录**
+* `ModelManageController.cpp/h`: 负责处理与模型管理（增删改查）相关的业务逻辑，调用 `DAO` 层进行数据库操作.
+* `SingleEvaluationController.cpp/h`: 负责处理单机评估的业务逻辑，调用 `SingleEvaluation` 模型进行距离计算，并从 `DAO` 层获取所需的模型数据.
+* `FormationEvaluationController.cpp/h`: 负责处理编队评估的业务逻辑，调用 `FormationEvaluation` 模型进行计算.
+
+**6. `view` 目录**
+* `MainWindow.cpp/h`: 项目的主窗口，负责创建和管理各个标签页（模型管理、探测效能计算、实时仿真等）.
+* `ModelManagerView.cpp/h`: 实现了模型管理界面的逻辑，包括模型类型的切换、增删改查按钮的响应和表格的更新.
+* `DetectionPerformanceView.cpp/h`: 实现了单机和编队探测效能评估的界面逻辑，包括模型选择、评估按钮和结果显示.
+* `RealtimeSimulationView.cpp/h`: 实现了实时仿真评估的界面，用于模拟和展示各种模型的位置和状态，并显示实时评估指标.
+* `PostMissionEvaluationView.cpp/h`: 实现了任务后评估的界面，用于导入数据、进行评估，并将结果以表格和柱状图的形式展示.
+* `*ModelEditDialog.cpp/h` 和 `*ModelViewDialog.cpp/h`: 实现了用于新建、编辑和查看各种模型详细参数的对话框.
+
+### 文件组合功能介绍
+
+**1. 模型管理 (增删改查)**
+
+* **数据库定义**：`database/jammer_model.sql`、`radar_model.sql`、`target_model.sql` 和 `rcs_table.sql` 定义了存储模型数据的基础表结构.
+* **数据访问**：`data/DataManager.cpp/h` 提供了与 MySQL 数据库交互的底层封装. `model/src/*ModelDAO.cpp` 文件中的 `insert`、`update`、`deleteById` 和 `find*` 等方法，利用 `DataManager` 提供的接口，实现了对数据库中特定模型数据的 CRUD 操作.
+* **业务逻辑**：`controller/src/ModelManageController.cpp/h` 封装了所有模型管理相关的业务逻辑，如 `createJammerModel` 或 `deleteTargetModel`，这些函数作为中间层，调用了相应的 `DAO` 方法.
+* **用户界面**：`view/src/ModelManagerView.cpp/h` 实现了模型管理界面的交互逻辑。当用户点击“新建”、“编辑”、“删除”或“查看”按钮时，它会调用相应的对话框 (`*ModelEditDialog` 或 `*ModelViewDialog`)，并根据用户的操作结果，调用 `ModelManageController` 中的方法来执行实际的数据库操作，最后刷新表格显示.
+
+**2. 探测效能评估 (单机与编队)**
+
+* **核心计算模型**：`model/src/SingleEvaluation.cpp/h` 和 `model/src/FormationEvaluation.cpp/h` 包含了用于计算无干扰、有干扰和抗干扰条件下，单部雷达或编队雷达的探测距离的物理公式和算法.
+* **控制器**：`controller/src/SingleEvaluationController.cpp/h` 和 `controller/src/FormationEvaluationController.cpp/h` 作为逻辑层，负责从 `DAO` 获取雷达、干扰机和目标模型数据，并根据用户选择的评估条件，调用相应的计算模型来得出探测距离结果.
+* **用户界面**：`view/src/DetectionPerformanceView.cpp/h` 提供了评估功能的界面。用户通过该界面选择评估条件（无干扰、有干扰、抗干扰）和参与评估的模型。点击“评估”按钮后，该视图会调用相应的控制器方法来触发计算，并将返回的结果（如探测距离、航迹连续性等）显示在界面上.
+
+**3. 实时仿真和任务后评估**
+
+* **实时仿真**：`view/src/RealtimeSimulationView.cpp/h` 实现了实时仿真的可视化界面。该界面使用 `QPainter` 在一个画布上绘制模型（如预警机、干扰机、目标机）的图形，并以文本形式展示其动态数据（经纬度、航向、速度等），同时显示实时的评估指标（如最远探测距离、航迹连续性）.
+* **任务后评估**：`view/src/PostMissionEvaluationView.cpp/h` 提供了任务后评估的界面。它允许用户导入数据，并根据单机或编队评估类型，在表格和柱状图中展示评估结果（如探测距离、探测精度等指标），并对比真实结果与仿真结果.
